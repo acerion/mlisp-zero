@@ -1,7 +1,13 @@
-/* uLisp Zero 1.1 - www.ulisp.com
-   David Johnson-Davies - www.technoblogy.com - 18th May 2017
+/*
+  mlisp-zero
+  https://github.com/acerion/mlisp-zero
 
-   Licensed under the MIT license: https://opensource.org/licenses/MIT
+  Licensed under the MIT license: https://opensource.org/licenses/MIT
+
+  Original copyright notice:
+        uLisp Zero 1.1 - www.ulisp.com
+        David Johnson-Davies - www.technoblogy.com - 18th May 2017
+        Licensed under the MIT license: https://opensource.org/licenses/MIT
 */
 
 #include <setjmp.h>
