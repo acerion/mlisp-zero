@@ -11,6 +11,7 @@
 */
 
 #include <setjmp.h>
+#include <stdbool.h>
 
 // C Macros
 
@@ -195,19 +196,19 @@ void error2 (object *symbol, PGM_P string) {
 
 // Helper functions
 
-boolean consp (object *x) {
+bool consp (object *x) {
   if (x == NULL) return false;
   unsigned int type = x->type;
   return type >= PAIR || type == ZERO;
 }
 
-boolean atom (object *x) {
+bool atom (object *x) {
   if (x == NULL) return true;
   unsigned int type = x->type;
   return type < PAIR && type != ZERO;
 }
 
-boolean listp (object *x) {
+bool listp (object *x) {
   if (x == NULL) return true;
   unsigned int type = x->type;
   return type >= PAIR || type == ZERO;
@@ -231,7 +232,7 @@ int pack40 (char *buffer) {
   return (((toradix40(buffer[0]) * 40) + toradix40(buffer[1])) * 40 + toradix40(buffer[2]));
 }
 
-boolean valid40 (char *buffer) {
+bool valid40 (char *buffer) {
  return (toradix40(buffer[0]) >= 0 && toradix40(buffer[1]) >= 0 && toradix40(buffer[2]) >= 0);
 }
 
