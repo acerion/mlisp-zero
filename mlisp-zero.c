@@ -49,8 +49,8 @@ typedef unsigned int symbol_t;
 typedef struct sobject {
   union {
     struct {
-      sobject *car;
-      sobject *cdr;
+      struct sobject *car;
+      struct sobject *cdr;
     };
     struct {
       unsigned int type;
