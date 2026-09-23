@@ -10,8 +10,12 @@
         Licensed under the MIT license: https://opensource.org/licenses/MIT
 */
 
+#include <ctype.h>
 #include <setjmp.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // C Macros
 
