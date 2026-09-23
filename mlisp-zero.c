@@ -101,6 +101,16 @@ char LastChar = 0;
 char LastPrint = 0;
 volatile char Escape = 0;
 
+void error(PGM_P string);
+object *eval(object *form, object *env);
+char *lookupbuiltin(symbol_t name);
+void pchar(char c);
+void pfl();
+void pfstring(PGM_P s);
+void pln();
+void printobject(object *form);
+object *read();
+
 // Forward references
 object *tee;
 
