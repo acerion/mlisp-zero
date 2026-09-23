@@ -632,8 +632,8 @@ object *eval (object *form, object *env) {
 
 void pchar (char c) {
   LastPrint = c;
-  Serial.write(c);
-  if (c == '\r') Serial.write('\n');
+  putchar(c);
+  if (c == '\r') putchar('\n');
 }
 
 void pstring (char *s) {
@@ -695,8 +695,7 @@ int gchar () {
     LastChar = 0;
     return temp;
   }
-  while (!Serial.available()) ;
-  char temp = Serial.read();
+  char temp = getchar();
   if (temp != '\r') pchar(temp);
   return temp;
 }
@@ -774,8 +773,6 @@ void initenv() {
 }
 
 void setup() {
-  Serial.begin(9600);
-  while (!Serial);  // wait for Serial to initialize
   initworkspace();
   initenv();
   pfstring(PSTR("uLisp Zero 1.1")); pln();
