@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // C Macros
 
@@ -525,7 +526,7 @@ const tbl_entry_t lookup_table[] PROGMEM = {
 int builtin (char* n) {
   int entry = 0;
   while (entry < ENDFUNCTIONS) {
-   if (strcmp_P(n, (PGM_P)pgm_read_word(&lookup_table[entry].string)) == 0 )
+   if (strcmp(n, (PGM_P)pgm_read_word(&lookup_table[entry].string)) == 0 )
       return entry;
     entry++;
   }
@@ -545,7 +546,7 @@ int lookupmax (symbol_t name) {
 }
 
 char *lookupbuiltin (symbol_t name) {
-  strcpy_P(Buffer, (PGM_P)(pgm_read_word(&lookup_table[name].string)));
+  strcpy(Buffer, (PGM_P)(pgm_read_word(&lookup_table[name].string)));
   return Buffer;
 }
 
