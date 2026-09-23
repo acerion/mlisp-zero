@@ -38,6 +38,10 @@
 #define marked(x)          ((((uintptr_t)(car(x))) & MARKBIT) != 0)
 #define MARKBIT            1
 
+#define PROGMEM // Empty definition
+#define PSTR(x) (x)
+typedef const char * PGM_P;
+
 // Constants
 
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
