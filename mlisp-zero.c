@@ -526,7 +526,7 @@ const tbl_entry_t lookup_table[] PROGMEM = {
 int builtin (char* n) {
   int entry = 0;
   while (entry < ENDFUNCTIONS) {
-   if (strcmp(n, (PGM_P)pgm_read_word(&lookup_table[entry].string)) == 0 )
+   if (strcmp(n, (PGM_P)lookup_table[entry].string) == 0 )
       return entry;
     entry++;
   }
@@ -534,19 +534,19 @@ int builtin (char* n) {
 }
 
 fn_ptr_type lookupfn (symbol_t name) {
-  return (fn_ptr_type)pgm_read_word(&lookup_table[name].fptr);
+  return (fn_ptr_type)lookup_table[name].fptr;
 }
 
 int lookupmin (symbol_t name) {
-  return pgm_read_word(&lookup_table[name].min);
+  return lookup_table[name].min;
 }
 
 int lookupmax (symbol_t name) {
-  return pgm_read_word(&lookup_table[name].max);
+  return lookup_table[name].max;
 }
 
 char *lookupbuiltin (symbol_t name) {
-  strcpy(Buffer, (PGM_P)(pgm_read_word(&lookup_table[name].string)));
+  strcpy(Buffer, (PGM_P)lookup_table[name].string);
   return Buffer;
 }
 
@@ -641,9 +641,10 @@ void pstring (char *s) {
 }
 
 void pfstring (PGM_P s) {
-  int p = (int)s;
+  const char * p = s;
   while (1) {
-    char c = pgm_read_byte(p++);
+    char c = *p;
+    p++;
     if (c == 0) return;
     pchar(c);
   }
