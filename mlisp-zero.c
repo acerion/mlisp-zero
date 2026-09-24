@@ -799,7 +799,12 @@ void repl(object *env) {
   }
 }
 
-void loop() {
-  setjmp(exception);
-  repl(NULL);
+int main(void)
+{
+	setup();
+	setjmp(exception);
+	repl(NULL);
+
+	return 0;
 }
+
