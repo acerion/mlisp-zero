@@ -776,7 +776,7 @@ void initenv() {
 void setup() {
   initworkspace();
   initenv();
-  pfstring(PSTR("uLisp Zero 1.1")); pln();
+  pfstring(PSTR("mlisp-zero v1.0")); pln();
 }
 
 // Read/Evaluate/Print loop
