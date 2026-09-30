@@ -21,10 +21,10 @@
 // C Macros
 
 #define nil                NULL
-#define car(x)             (((object *) (x))->car)
-#define cdr(x)             (((object *) (x))->cdr)
+#define car(x)             ((x)->car)
+#define cdr(x)             ((x)->cdr)
 
-#define first(x)           (((object *) (x))->car)
+#define first(x)           ((x)->car)
 #define second(x)          (car(cdr(x)))
 #define cddr(x)            (cdr(cdr(x)))
 #define third(x)           (car(cdr(cdr(x))))
@@ -583,7 +583,7 @@ const tbl_entry_t lookup_table[] PROGMEM = {
 int builtin (char* n) {
   int entry = 0;
   while (entry < ENDFUNCTIONS) {
-   if (strcmp(n, (PGM_P)lookup_table[entry].string) == 0 )
+   if (strcmp(n, lookup_table[entry].string) == 0 )
       return entry;
     entry++;
   }
@@ -591,7 +591,7 @@ int builtin (char* n) {
 }
 
 fn_ptr_type lookupfn (symbol_t name) {
-  return (fn_ptr_type)lookup_table[name].fptr;
+  return lookup_table[name].fptr;
 }
 
 int lookupmin (symbol_t name) {
@@ -603,7 +603,7 @@ int lookupmax (symbol_t name) {
 }
 
 char *lookupbuiltin (symbol_t name) {
-  strcpy(Buffer, (PGM_P)lookup_table[name].string);
+  strcpy(Buffer, lookup_table[name].string);
   return Buffer;
 }
 
@@ -642,7 +642,7 @@ object *eval (object *form, object *env) {
     }
     
     if ((name > SPECIAL_FORMS) && (name < FUNCTIONS)) {
-      return ((fn_ptr_type)lookupfn(name))(args, env);
+      return (lookupfn(name))(args, env);
     }
   }
         
@@ -670,7 +670,7 @@ object *eval (object *form, object *env) {
     if (name >= ENDFUNCTIONS) error2(fname, PSTR("is not valid here"));
     if (nargs<lookupmin(name)) error2(fname, PSTR("has too few arguments"));
     if (nargs>lookupmax(name)) error2(fname, PSTR("has too many arguments"));
-    object *result = ((fn_ptr_type)lookupfn(name))(args, env);
+    object *result = (lookupfn(name))(args, env);
     pop(GCStack);
     return result;
   }
