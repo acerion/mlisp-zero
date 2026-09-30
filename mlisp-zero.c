@@ -40,7 +40,6 @@
 #define MARKBIT            1
 
 #define PROGMEM // Empty definition
-#define PSTR(x) (x)
 
 // Constants
 
@@ -139,7 +138,7 @@ void initworkspace () {
 }
 
 object *myalloc () {
-  if (Freespace == 0) error(PSTR("No room"));
+  if (Freespace == 0) error("No room");
   object *temp = Freelist;
   Freelist = cdr(Freelist);
   Freespace--;
@@ -208,16 +207,16 @@ void gc (object *form, object *env) {
 // Error handling
 
 void error (const char * string) {
-  pfl(); pfstring(PSTR("Error: "));
+  pfl(); pfstring("Error: ");
   pfstring(string); pln();
   GCStack = NULL;
   longjmp(exception, 1);
 }
 
 void error2 (object *symbol, const char * string) {
-  pfl(); pfstring(PSTR("Error: "));
-  if (symbol == NULL) pfstring(PSTR("function "));
-  else { pchar('\''); printobject(symbol); pfstring(PSTR("' ")); }
+  pfl(); pfstring("Error: ");
+  if (symbol == NULL) pfstring("function ");
+  else { pchar('\''); printobject(symbol); pfstring("' "); }
   pfstring(string); pln();
   GCStack = NULL;
   longjmp(exception, 1);
@@ -266,7 +265,7 @@ bool valid40 (char *buffer) {
 }
 
 char *name (object *obj) {
-  if(!symbolp(obj)) error(PSTR("Error in name"));
+  if(!symbolp(obj)) error("Error in name");
   symbol_t x = obj->name;
   if (x < ENDFUNCTIONS) return lookupbuiltin(x);
   Buffer[3] = '\0';
@@ -313,7 +312,7 @@ object *findvalue (object *var, object *env) {
   symbol_t varname = var->name;
   object *pair = value(varname, env);
   if (pair == NULL) pair = value(varname, GlobalEnv);
-  if (pair == NULL) error2(var,PSTR("unknown variable"));
+  if (pair == NULL) error2(var,"unknown variable");
   return pair;
 }
 
@@ -350,8 +349,8 @@ object *closure (object *fname, object *function, object *args, object **env) {
     push(cons(var,value), *env);
     params = cdr(params);
   }
-  if (params != NULL) error2(fname, PSTR("has too few parameters"));
-  if (args != NULL) error2(fname, PSTR("has too many parameters"));
+  if (params != NULL) error2(fname, "has too few parameters");
+  if (args != NULL) error2(fname, "has too many parameters");
   // Do an implicit progn
   return progn(function, *env);
 }
@@ -359,13 +358,13 @@ object *closure (object *fname, object *function, object *args, object **env) {
 // Checked car and cdr
 
 inline object *carx (object *arg) {
-  if (!listp(arg)) error(PSTR("Can't take car"));
+  if (!listp(arg)) error("Can't take car");
   if (arg == nil) return nil;
   return car(arg);
 }
 
 inline object *cdrx (object *arg) {
-  if (!listp(arg)) error(PSTR("Can't take cdr"));
+  if (!listp(arg)) error("Can't take cdr");
   if (arg == nil) return nil;
   return cdr(arg);
 }
@@ -612,7 +611,7 @@ object *eval (object *form, object *env) {
   // Enough space?
   if (Freespace < 20) gc(form, env);
   // Escape
-  if (Escape) { Escape = 0; error(PSTR("Escape!"));}
+  if (Escape) { Escape = 0; error("Escape!");}
   
   if (form == NULL) return nil;
 
@@ -624,7 +623,7 @@ object *eval (object *form, object *env) {
     pair = value(name, GlobalEnv);
     if (pair != NULL) return cdr(pair);
     else if (name <= ENDFUNCTIONS) return form;
-    error2(form, PSTR("undefined"));
+    error2(form, "undefined");
   }
   
   // It's a list
@@ -637,7 +636,7 @@ object *eval (object *form, object *env) {
 
     if (name == LAMBDA) {
       if (env == NULL) return form;
-      error(PSTR("closures not supported"));
+      error("closures not supported");
     }
     
     if ((name > SPECIAL_FORMS) && (name < FUNCTIONS)) {
@@ -666,9 +665,9 @@ object *eval (object *form, object *env) {
  
   if (symbolp(function)) {
     symbol_t name = function->name;
-    if (name >= ENDFUNCTIONS) error2(fname, PSTR("is not valid here"));
-    if (nargs<lookupmin(name)) error2(fname, PSTR("has too few arguments"));
-    if (nargs>lookupmax(name)) error2(fname, PSTR("has too many arguments"));
+    if (name >= ENDFUNCTIONS) error2(fname, "is not valid here");
+    if (nargs<lookupmin(name)) error2(fname, "has too few arguments");
+    if (nargs>lookupmax(name)) error2(fname, "has too many arguments");
     object *result = (lookupfn(name))(args, env);
     pop(GCStack);
     return result;
@@ -681,7 +680,7 @@ object *eval (object *form, object *env) {
     return eval(form, env);
   } 
   
-  error2(fname, PSTR("is an illegal function")); return nil;
+  error2(fname, "is an illegal function"); return nil;
 }
 
 // Print functions
@@ -725,7 +724,7 @@ void pfl () {
 }
 
 void printobject(object *form){
-  if (form == NULL) pfstring(PSTR("nil"));
+  if (form == NULL) pfstring("nil");
   else if (listp(form)) {
     pchar('(');
     printobject(car(form));
@@ -736,14 +735,14 @@ void printobject(object *form){
       form = cdr(form);
     }
     if (form != NULL) {
-      pfstring(PSTR(" . "));
+      pfstring(" . ");
       printobject(form);
     }
     pchar(')');
   } else if (symbolp(form)) {
     pstring(name(form));
   } else
-    error(PSTR("Error in print."));
+    error("Error in print.");
 }
 
 int gchar () {
@@ -790,7 +789,7 @@ object *nextitem() {
   if (x == NIL) return nil;
   if (x < ENDFUNCTIONS) return symbol(x);
   else if (index < 4 && valid40(Buffer)) return symbol(pack40(Buffer));
-  error(PSTR("Illegal symbol"));
+  error("Illegal symbol");
   return nil;
 }
 
@@ -801,7 +800,7 @@ object *readrest() {
   
   if(item == (object *)DOT) {
     object *arg1 = read();
-    if (readrest() != NULL) error(PSTR("Malformed list"));
+    if (readrest() != NULL) error("Malformed list");
     return arg1;
   }
 
@@ -832,7 +831,7 @@ void initenv() {
 void setup() {
   initworkspace();
   initenv();
-  pfstring(PSTR("mlisp-zero v1.0")); pln();
+  pfstring("mlisp-zero v1.0"); pln();
 }
 
 // Read/Evaluate/Print loop
@@ -841,9 +840,9 @@ void repl(object *env) {
   for (;;) {
     gc(NULL, env);
     pint(Freespace);
-    pfstring(PSTR("> "));
+    pfstring("> ");
     object *line = read();
-    if (line == (object *)KET) error(PSTR("Unmatched right bracket"));
+    if (line == (object *)KET) error("Unmatched right bracket");
     push(line, GCStack);
     pfl();
     line = eval(line, env);
