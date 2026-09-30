@@ -48,7 +48,7 @@ typedef const char * PGM_P;
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
 enum token { UNUSED, BRA, KET, QUO, DOT };
 
-enum function { SYMBOLS, NIL, TEE, LAMBDA, SPECIAL_FORMS, QUOTE, DEFUN, DEFVAR, SETQ, IF, FUNCTIONS, NOT,
+enum function { SYMBOLS, NIL, TEE, LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
 NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
@@ -114,6 +114,17 @@ object *read();
 
 // Forward references
 object *tee;
+
+// Debugging
+
+void dbg_show(__attribute__((unused)) const char * label, __attribute__((unused)) object * obj)
+{
+#if 1
+	fprintf(stdout, "%s: ", label);
+	printobject(obj);
+	fprintf(stdout, "\n");
+#endif
+}
 
 // Set up workspace
 
@@ -367,25 +378,74 @@ object *sp_quote (object *args, object *env) {
   return first(args);
 }
 
-object *sp_defun (object *args, object *env) {
-  (void) env;
-  object *var = first(args);
-  if (!symbolp(var)) error2(var, PSTR("is not a symbol"));
-  object *val = cons(symbol(LAMBDA), cdr(args));
-  object *pair = value(var->name,GlobalEnv);
-  if (pair != NULL) { cdr(pair) = val; return var; }
-  push(cons(var, val), GlobalEnv);
-  return var;
-}
+object * sp_define(object * args, object * env)
+{
+	(void) env;
 
-object *sp_defvar (object *args, object *env) {
-  object *var = first(args);
-  if (!symbolp(var)) error2(var, PSTR("is not a symbol"));
-  object *val = eval(second(args), env);
-  object *pair = value(var->name,GlobalEnv);
-  if (pair != NULL) { cdr(pair) = val; return var; }
-  push(cons(var, val), GlobalEnv);
-  return var;
+	object * head = car(args); // First object after "define".
+	dbg_show("== args", args);
+	dbg_show("== head", head);
+
+	if (symbolp(head)) {
+
+		// FIXME (acerion) 2026.09.29: uLisp originally used
+		// sp_defvar() with hardcoded limits on min/max count of args
+		// to defvar (min=2/max=2). Current code allows us to write
+		// (define x 'a 'b 'c ...) - there is no validation that
+		// "(define variable expression)" is built with only one
+		// 'variable' and only one 'expression'.
+
+		// R7RS-small, chapter 5.3, form 1.
+		object * variable = head;
+		object * expression = second(args); // 'second' returns non-list.
+
+		dbg_show("== variable", variable);
+		dbg_show("== expression", expression);
+
+		// Existing or new object with name == variable and with
+		// value set to result of evaluation.
+		object * val = eval(expression, env);
+		object * pair = value(variable->name, GlobalEnv);
+		if (pair != NULL) {
+			// Update existing object.
+			cdr(pair) = val;
+		} else {
+			// Crate new object.
+			push(cons(variable, val), GlobalEnv);
+		}
+		return variable;
+
+	} else if (consp(head)) {
+		// R7RS-small, chapter 5.3, form 2 and 3.
+		object * variable = car(head);  // Function's name
+		object * formals = cdr(head);   // Function's formal arguments
+		object * body = cdr(args);      // Function's body - the tail of "((f x) . (<some operations on x>))"
+
+		object * formals_list =
+			listp(formals) ?
+			formals :             // To properly represent formals coming from form "(define (f x) <body>)"
+			(cons(formals, nil)); // To properly represent formals coming from form "(define (f . x) <body>)"
+
+		dbg_show("== function name", variable);
+		dbg_show("== function args", formals_list);
+		dbg_show("== function body", body);
+
+		// Existing or new object with name == variable and with
+		// value set to lambda.
+		object * val = cons(symbol(LAMBDA), cons(formals_list, body));
+		object * pair = value(variable->name, GlobalEnv);
+		if (pair != NULL) {
+			// Update existing object.
+			cdr(pair) = val;
+		} else {
+			// Crate new object.
+			push(cons(variable, val), GlobalEnv);
+		}
+		return head;
+	} else {
+		error2(head, "is neither symbol nor list");
+		return NULL;
+	}
 }
 
 object *sp_setq (object *args, object *env) {
@@ -475,8 +535,6 @@ const char string2[] PROGMEM = "t";
 const char string3[] PROGMEM = "lambda";
 const char string4[] PROGMEM = "special_forms";
 const char string5[] PROGMEM = "quote";
-const char string6[] PROGMEM = "defun";
-const char string7[] PROGMEM = "defvar";
 const char string8[] PROGMEM = "setq";
 const char string9[] PROGMEM = "if";
 const char string10[] PROGMEM = "functions";
@@ -501,8 +559,7 @@ const tbl_entry_t lookup_table[] PROGMEM = {
   { string3, NULL, 0, 127 },
   { string4, NULL, NIL, NIL },
   { string5, sp_quote, 1, 1 },
-  { string6, sp_defun, 0, 127 },
-  { string7, sp_defvar, 2, 2 },
+  { "define",   sp_define, 0, 127 },
   { string8, sp_setq, 2, 2 },
   { string9, sp_if, 2, 3 },
   { string10, NULL, NIL, NIL },
