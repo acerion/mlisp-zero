@@ -41,6 +41,16 @@
 
 #define PROGMEM // Empty definition
 
+#ifdef SDCC
+int putchar(int c) { return c; }
+int getchar(void) { return 0; }
+void exit(int x)
+{
+	(void) x;
+	while (1);
+}
+#endif
+
 // Constants
 
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
@@ -79,7 +89,7 @@ typedef struct {
 } tbl_entry_t;
 
 // Workspace - sizes in bytes
-#define WORDALIGNED __attribute__((aligned (2)))
+#define WORDALIGNED
 #define BUFFERSIZE 18
 #define WORKSPACESIZE 320            /* Cells (4*bytes) */
 
@@ -115,12 +125,14 @@ object *tee;
 
 // Debugging
 
-void dbg_show(__attribute__((unused)) const char * label, __attribute__((unused)) object * obj)
+void dbg_show(const char * label, object * obj)
 {
+	(void) label;
+	(void) obj;
 #if 1
-	fprintf(stdout, "%s: ", label);
+	printf("%s: ", label);
 	printobject(obj);
-	fprintf(stdout, "\n");
+	printf("\n");
 #endif
 }
 
