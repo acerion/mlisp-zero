@@ -41,7 +41,6 @@
 
 #define PROGMEM // Empty definition
 #define PSTR(x) (x)
-typedef const char * PGM_P;
 
 // Constants
 
@@ -74,7 +73,7 @@ typedef struct sobject {
 typedef object *(*fn_ptr_type)(object *, object *);
 
 typedef struct {
-  PGM_P string;
+  const char * string;
   fn_ptr_type fptr;
   int min;
   int max;
@@ -102,12 +101,12 @@ char LastChar = 0;
 char LastPrint = 0;
 volatile char Escape = 0;
 
-void error(PGM_P string);
+void error(const char * string);
 object *eval(object *form, object *env);
 char *lookupbuiltin(symbol_t name);
 void pchar(char c);
 void pfl();
-void pfstring(PGM_P s);
+void pfstring(const char * s);
 void pln();
 void printobject(object *form);
 object *read();
@@ -208,14 +207,14 @@ void gc (object *form, object *env) {
 
 // Error handling
 
-void error (PGM_P string) {
+void error (const char * string) {
   pfl(); pfstring(PSTR("Error: "));
   pfstring(string); pln();
   GCStack = NULL;
   longjmp(exception, 1);
 }
 
-void error2 (object *symbol, PGM_P string) {
+void error2 (object *symbol, const char * string) {
   pfl(); pfstring(PSTR("Error: "));
   if (symbol == NULL) pfstring(PSTR("function "));
   else { pchar('\''); printobject(symbol); pfstring(PSTR("' ")); }
@@ -697,7 +696,7 @@ void pstring (char *s) {
   while (*s) pchar(*s++);
 }
 
-void pfstring (PGM_P s) {
+void pfstring (const char * s) {
   const char * p = s;
   while (1) {
     char c = *p;
