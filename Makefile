@@ -8,10 +8,10 @@ x86:
 	mlisp-zero.c -o mlisp-zero
 
 z80:
-	mkdir -p z80
-	sdcc -DSDCC -mz80 --no-std-crt0 -o z80/ mlisp-zero.c
+	mkdir -p z80_build
+	sdcc -DSDCC -mz80 --no-std-crt0 -o z80_build/ mlisp-zero.c
 
 clean:
 	rm -rf mlisp-zero
-	rm -rf z80/
+	rm -rf z80_build/
 
