@@ -541,7 +541,6 @@ object *fn_locals (object *args, object *env) {
 
 const char string0[] PROGMEM = "symbols";
 const char string1[] PROGMEM = "nil";
-const char string2[] PROGMEM = "t";
 const char string3[] PROGMEM = "lambda";
 const char string4[] PROGMEM = "special_forms";
 const char string5[] PROGMEM = "quote";
@@ -565,7 +564,7 @@ const char string23[] PROGMEM = "locals";
 const tbl_entry_t lookup_table[] PROGMEM = {
   { string0, NULL, NIL, NIL },
   { string1, NULL, 0, 0 },
-  { string2, NULL, 1, 0 },
+  { "#t",       NULL, 1, 0 }, // tee
   { string3, NULL, 0, 127 },
   { string4, NULL, NIL, NIL },
   { string5, sp_quote, 1, 1 },
