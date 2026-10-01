@@ -56,7 +56,10 @@ void exit(int x)
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
 enum token { UNUSED, BRA, KET, QUO, DOT };
 
-enum function { SYMBOLS, NIL, TEE, LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
+enum function { SYMBOLS, NIL,
+		TEE, // #t, #true
+		EFF, // #f, #false
+		LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
 NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
@@ -121,7 +124,8 @@ void printobject(object *form);
 object *read();
 
 // Forward references
-object *tee;
+object * tee;
+object * eff;
 
 // Debugging
 
@@ -208,7 +212,8 @@ void sweep () {
 }
 
 void gc (object *form, object *env) {
-  markobject(tee); 
+  markobject(tee);
+  markobject(eff);
   markobject(GlobalEnv);
   markobject(GCStack);
   markobject(form);
@@ -565,6 +570,7 @@ const tbl_entry_t lookup_table[] PROGMEM = {
   { string0, NULL, NIL, NIL },
   { string1, NULL, 0, 0 },
   { "#t",       NULL, 1, 0 }, // tee
+  { "#f",       NULL, 1, 0 }, // eff
   { string3, NULL, 0, 127 },
   { string4, NULL, NIL, NIL },
   { string5, sp_quote, 1, 1 },
@@ -852,6 +858,7 @@ object *read() {
 void initenv() {
   GlobalEnv = NULL;
   tee = symbol(TEE);
+  eff = symbol(EFF);
 }
 
 void setup() {
