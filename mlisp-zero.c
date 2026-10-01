@@ -115,7 +115,7 @@ volatile char Escape = 0;
 
 void error(const char * string);
 object *eval(object *form, object *env);
-char *lookupbuiltin(symbol_t name);
+const char * lookupbuiltin(symbol_t name);
 void pchar(char c);
 void pfl();
 void pfstring(const char * s);
@@ -281,7 +281,7 @@ bool valid40 (char *buffer) {
  return (toradix40(buffer[0]) >= 0 && toradix40(buffer[1]) >= 0 && toradix40(buffer[2]) >= 0);
 }
 
-char *name (object *obj) {
+const char *name (object *obj) {
   if(!symbolp(obj)) error("Error in name");
   symbol_t x = obj->name;
   if (x < ENDFUNCTIONS) return lookupbuiltin(x);
@@ -595,31 +595,41 @@ const tbl_entry_t lookup_table[] PROGMEM = {
 
 // Table lookup functions
 
-int builtin (char* n) {
-  int entry = 0;
-  while (entry < ENDFUNCTIONS) {
-   if (strcmp(n, lookup_table[entry].string) == 0 )
-      return entry;
-    entry++;
-  }
-  return ENDFUNCTIONS;
+// Get index to lookup_table[] at which built in symbol, special form or
+// function with given name is placed. Return ENDFUNCTIONS if not found.
+int builtin(const char * str)
+{
+	int entry = 0;
+	while (entry < ENDFUNCTIONS) {
+		if (strcmp(str, lookup_table[entry].string) == 0) {
+			return entry;
+		}
+		entry++;
+	}
+
+	return ENDFUNCTIONS;
 }
 
-fn_ptr_type lookupfn (symbol_t name) {
-  return lookup_table[name].fptr;
+fn_ptr_type lookupfn(symbol_t name)
+{
+	return lookup_table[name].fptr;
 }
 
-int lookupmin (symbol_t name) {
-  return lookup_table[name].min;
+int lookupmin(symbol_t name)
+{
+	return lookup_table[name].min;
 }
 
-int lookupmax (symbol_t name) {
-  return lookup_table[name].max;
+int lookupmax(symbol_t name)
+{
+	return lookup_table[name].max;
 }
 
-char *lookupbuiltin (symbol_t name) {
-  strcpy(Buffer, lookup_table[name].string);
-  return Buffer;
+// Index of symbol in lookup_table -> symbol's name.
+const char * lookupbuiltin(symbol_t name)
+{
+	strcpy(Buffer, lookup_table[name].string);
+	return Buffer;
 }
 
 // Main evaluator
