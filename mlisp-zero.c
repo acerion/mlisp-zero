@@ -572,17 +572,17 @@ const char string22[] PROGMEM = "globals";
 const char string23[] PROGMEM = "locals";
 
 const tbl_entry_t lookup_table[] PROGMEM = {
-  { string0, NULL, NIL, NIL },
+  { string0, NULL, 0, 0 },
   { string1, NULL, 0, 0 },
   { "#t",       NULL, 1, 0 }, // tee
   { "#f",       NULL, 1, 0 }, // eff
   { string3, NULL, 0, 127 },
-  { string4, NULL, NIL, NIL },
+  { string4, NULL, 0, 0 },
   { string5, sp_quote, 1, 1 },
   { "define",   sp_define, 0, 127 },
   { string8, sp_setq, 2, 2 },
   { string9, sp_if, 2, 3 },
-  { string10, NULL, NIL, NIL },
+  { string10, NULL, 0, 0 },
   { string11, fn_not, 1, 1 },
   { string12, fn_not, 1, 1 },
   { string13, fn_cons, 2, 2 },
