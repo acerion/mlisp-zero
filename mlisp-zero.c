@@ -20,7 +20,8 @@
 
 // C Macros
 
-#define nil                NULL
+#define nil                NULL   // uLisp's "()"
+#define elist              nil    // Scheme's "empty list". Defined to be "nil" only until "nil" is gone. See also "#define ELIST"
 #define car(x)             ((x)->car)
 #define cdr(x)             ((x)->cdr)
 
@@ -61,6 +62,10 @@ enum function { SYMBOLS, NIL,
 		EFF, // #f, #false
 		LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
 NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
+
+// Scheme's "empty list". Temporary definition until NIL is removed. See also
+// "#define elist".
+#define ELIST NIL
 
 // Typedefs
 
@@ -639,20 +644,43 @@ object *eval (object *form, object *env) {
   if (Freespace < 20) gc(form, env);
   // Escape
   if (Escape) { Escape = 0; error("Escape!");}
-  
-  if (form == NULL) return nil;
 
+  // Empty list evaluates to itself.
+  if (form == elist) {
+    dbg_show("== empty-list", form);
+    return elist;
+  }
+
+  // The "(define (f x) ...)" form defines an "f" symbol.
+  // The "(define x ...)" form defines an "x" symbol.
+  // Also undefined objects will he handled here.
   if (symbolp(form)) {
-    symbol_t name = form->name;
-    if (name == NIL) return nil;
-    object *pair = value(name, env);
-    if (pair != NULL) return cdr(pair);
+    const symbol_t name = form->name;
+    if (name == ELIST) {
+      dbg_show("== symbol (elist)", form);
+      return elist;
+    }
+
+    // Find symbol's value in some environment.
+    const object * pair = value(name, env);
+    if (pair != NULL) {
+      dbg_show("== symbol (in local env)", form);
+      return cdr(pair);
+    }
     pair = value(name, GlobalEnv);
-    if (pair != NULL) return cdr(pair);
-    else if (name <= ENDFUNCTIONS) return form;
+    if (pair != NULL) {
+      dbg_show("== symbol (in global env)", form);
+      return cdr(pair);
+    }
+
+    // Is the symbol a built-in symbol/function?
+    if (name <= ENDFUNCTIONS) {
+      dbg_show("== symbol (built in)", form);
+      return form;
+    }
     error2(form, "undefined");
   }
-  
+
   // It's a list
   object *function = car(form);
   object *args = cdr(form);
@@ -766,8 +794,9 @@ void pfl () {
 }
 
 void printobject(object *form){
-  if (form == NULL) pfstring("nil");
-  else if (listp(form)) {
+  if (form == elist) {
+    pfstring("()");
+  } else if (listp(form)) {
     pchar('(');
     printobject(car(form));
     form = cdr(form);
