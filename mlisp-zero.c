@@ -325,14 +325,14 @@ object *value (symbol_t n, object *env) {
     if (pair != NULL && car(pair)->name == n) return pair;
     env = cdr(env);
   }
-  return nil;
+  return elist; // Variable not found.
 }
 
 object *findvalue (object *var, object *env) {
   symbol_t varname = var->name;
-  object *pair = value(varname, env);
-  if (pair == NULL) pair = value(varname, GlobalEnv);
-  if (pair == NULL) error2(var,"unknown variable");
+  object * pair = value(varname, env);
+  if (pair == elist) pair = value(varname, GlobalEnv);
+  if (pair == elist) error2(var,"unknown variable");
   return pair;
 }
 
@@ -424,7 +424,7 @@ object * sp_define(object * args, object * env)
 		// value set to result of evaluation.
 		object * val = eval(expression, env);
 		object * pair = value(variable->name, GlobalEnv);
-		if (pair != NULL) {
+		if (pair != elist) {
 			// Update existing object.
 			cdr(pair) = val;
 		} else {
@@ -452,7 +452,7 @@ object * sp_define(object * args, object * env)
 		// value set to lambda.
 		object * val = cons(symbol(LAMBDA), cons(formals_list, body));
 		object * pair = value(variable->name, GlobalEnv);
-		if (pair != NULL) {
+		if (pair != elist) {
 			// Update existing object.
 			cdr(pair) = val;
 		} else {
@@ -662,12 +662,12 @@ object *eval (object *form, object *env) {
 
     // Find symbol's value in some environment.
     const object * pair = value(name, env);
-    if (pair != NULL) {
+    if (pair != elist) {
       dbg_show("== symbol (in local env)", form);
       return cdr(pair);
     }
     pair = value(name, GlobalEnv);
-    if (pair != NULL) {
+    if (pair != elist) {
       dbg_show("== symbol (in global env)", form);
       return cdr(pair);
     }
