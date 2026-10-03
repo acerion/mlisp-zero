@@ -110,7 +110,9 @@ char ReturnFlag = 0;
 object *Freelist;
 //extern uint8_t _end;
 
-object *GlobalEnv;
+// A list that will be initially empty (initialized with ()).
+object * GlobalEnv;
+
 object *GCStack = NULL;
 char LastChar = 0;
 char LastPrint = 0;
@@ -320,7 +322,9 @@ object *progn (object *args, object *env) {
 // Lookup variable in environment
 
 object *value (symbol_t n, object *env) {
-  while (env != NULL) {
+  // env is a list, so iterate over the list, recognizing () as terminator of
+  // the list.
+  while (env != elist) {
     object *pair = car(env);
     if (pair != NULL && car(pair)->name == n) return pair;
     env = cdr(env);
@@ -337,21 +341,23 @@ object *findvalue (object *var, object *env) {
 }
 
 object *findtwin (object *var, object *env) {
-  while (env != NULL) {
+  // env is a list, so iterate over the list, recognizing () as terminator of
+  // the list.
+  while (env != elist) {
     object *pair = car(env);
     if (pair != NULL && car(pair) == var) return pair;
     env = cdr(env);
   }
-  return NULL;
+  return elist; // Variable not found.
 }
 
 void dropframe (int tc, object **env) {
   if (tc) {
-    while (*env != NULL && car(*env) != NULL) {
+    while (*env != elist && car(*env) != NULL) {
       pop(*env);
     }
   } else {
-    push(nil, *env);
+    push(elist, *env);
   }
 }
 
@@ -902,7 +908,7 @@ object *read() {
 // Setup
 
 void initenv() {
-  GlobalEnv = NULL;
+  GlobalEnv = elist;
   tee = symbol(TEE);
   eff = symbol(EFF);
 }
