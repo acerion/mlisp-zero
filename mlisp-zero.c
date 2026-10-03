@@ -57,15 +57,13 @@ void exit(int x)
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
 enum token { UNUSED, BRA, KET, QUO, DOT };
 
-enum function { SYMBOLS, NIL,
-		TEE, // #t, #true
-		EFF, // #f, #false
-		LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
+enum function {
+	SYMBOLS,
+	ELIST,  // (), empty list
+	TEE,    // #t, #true
+	EFF,    // #f, #false
+	LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
 NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
-
-// Scheme's "empty list". Temporary definition until NIL is removed. See also
-// "#define elist".
-#define ELIST NIL
 
 // Typedefs
 
@@ -550,7 +548,6 @@ object *fn_locals (object *args, object *env) {
 // Built-in procedure names - stored in PROGMEM
 
 const char string0[] PROGMEM = "symbols";
-const char string1[] PROGMEM = "nil";
 const char string3[] PROGMEM = "lambda";
 const char string4[] PROGMEM = "special_forms";
 const char string5[] PROGMEM = "quote";
@@ -573,7 +570,9 @@ const char string23[] PROGMEM = "locals";
 
 const tbl_entry_t lookup_table[] PROGMEM = {
   { string0, NULL, 0, 0 },
-  { string1, NULL, 0, 0 },
+  // TODO (acerion) 2026.10.03: I'm not 100% sure if empty list deserves its
+  // own entry in this table.
+  { "()",       NULL, 0, 0 }, // elist
   { "#t",       NULL, 1, 0 }, // tee
   { "#f",       NULL, 1, 0 }, // eff
   { string3, NULL, 0, 127 },
@@ -855,9 +854,12 @@ object *nextitem() {
   Buffer[index] = '\0';
   if (ch == ')') LastChar = ')';
   if (ch == '(') LastChar = '(';
-  
+
   int x = builtin(Buffer);
-  if (x == NIL) return nil;
+  if (x == ELIST) {
+    dbg_show("== nextitem(): empty-list", elist);
+    return elist;
+  }
   if (x < ENDFUNCTIONS) return symbol(x);
   else if (index < 4 && valid40(Buffer)) return symbol(pack40(Buffer));
   error("Illegal symbol");
