@@ -443,8 +443,8 @@ object * sp_define(object * args, object * env)
 
 		object * formals_list =
 			listp(formals) ?
-			formals :             // To properly represent formals coming from form "(define (f x) <body>)"
-			(cons(formals, nil)); // To properly represent formals coming from form "(define (f . x) <body>)"
+			formals :               // To properly represent formals coming from form "(define (f x) <body>)"
+			(cons(formals, elist)); // To properly represent formals coming from form "(define (f . x) <body>)"
 
 		dbg_show("== function name", variable);
 		dbg_show("== function args", formals_list);
@@ -701,14 +701,14 @@ object *eval (object *form, object *env) {
         
   // Evaluate the parameters - result in head
   object *fname = car(form);
-  object *head = cons(eval(car(form), env), NULL);
+  object *head = cons(eval(car(form), env), elist);
   push(head, GCStack); // Don't GC the result list
   object *tail = head;
   form = cdr(form);
   int nargs = 0;
 
   while (form != NULL) {
-    object *obj = cons(eval(car(form),env),NULL);
+    object *obj = cons(eval(car(form),env), elist);
     cdr(tail) = obj;
     tail = obj;
     form = cdr(form);
@@ -877,7 +877,7 @@ object *readrest() {
 
   if(item == (object *)QUO) {
     object *arg1 = read();
-    return cons(cons(symbol(QUOTE), cons(arg1, NULL)), readrest());
+    return cons(cons(symbol(QUOTE), cons(arg1, elist)), readrest());
   }
    
   if(item == (object *)BRA) item = readrest(); 
@@ -888,7 +888,7 @@ object *read() {
   object *item = nextitem();
   if (item == (object *)BRA) return readrest();
   if (item == (object *)DOT) return read();
-  if (item == (object *)QUO) return cons(symbol(QUOTE), cons(read(), NULL)); 
+  if (item == (object *)QUO) return cons(symbol(QUOTE), cons(read(), elist));
   return item;
 }
 
