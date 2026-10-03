@@ -462,7 +462,7 @@ object * sp_define(object * args, object * env)
 		return head;
 	} else {
 		error2(head, "is neither symbol nor list");
-		return NULL;
+		return elist; // What we return after error2()'s longjmp() call doesn't really matter.
 	}
 }
 
@@ -734,7 +734,8 @@ object *eval (object *form, object *env) {
     return eval(form, env);
   } 
   
-  error2(fname, "is an illegal function"); return nil;
+  error2(fname, "is an illegal function");
+  return elist; // What we return after error2()'s longjmp() call doesn't really matter.
 }
 
 // Print functions
@@ -863,7 +864,7 @@ object *nextitem() {
   if (x < ENDFUNCTIONS) return symbol(x);
   else if (index < 4 && valid40(Buffer)) return symbol(pack40(Buffer));
   error("Illegal symbol");
-  return nil;
+  return elist; // What we return after error()'s longjmp() call doesn't really matter.
 }
 
 object *readrest() {
