@@ -379,13 +379,17 @@ object *closure (object *fname, object *function, object *args, object **env) {
 
 inline object *carx (object *arg) {
   if (!listp(arg)) error("Can't take car");
-  if (arg == nil) return nil;
+  if (arg == elist) {
+    error("(car ())"); // You can't take car of empty list.
+  }
   return car(arg);
 }
 
 inline object *cdrx (object *arg) {
   if (!listp(arg)) error("Can't take cdr");
-  if (arg == nil) return nil;
+  if (arg == elist) {
+    error("(cdr ())"); // You can't take cdr of empty list.
+  }
   return cdr(arg);
 }
 
