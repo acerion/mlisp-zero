@@ -699,7 +699,10 @@ object *eval (object *form, object *env) {
     symbol_t name = function->name;
 
     if (name == LAMBDA) {
-      if (env == NULL) return form;
+      if (env == elist) {
+        // Empty environment.
+        return form;
+      }
       error("closures not supported");
     }
     
