@@ -132,6 +132,13 @@ object *read();
 object * tee;
 object * eff;
 
+// A macro that mimics SICP's "self-evaluating?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the conditions should be checking type ("empty
+// list" type or "boolean" type). Scheme has such types, but this
+// implementation doesn't support them yet).
+#define self_evaluating_p(x) ((x) == elist || (x)->name == TEE || (x)->name == EFF)
+
 // Debugging
 
 void dbg_show(const char * label, object * obj)
@@ -654,10 +661,9 @@ object *eval (object *form, object *env) {
   // Escape
   if (Escape) { Escape = 0; error("Escape!");}
 
-  // Empty list evaluates to itself.
-  if (form == elist) {
-    dbg_show("== empty-list", form);
-    return elist;
+  if (self_evaluating_p(form)) {
+    dbg_show("== eval::self-evaluating", form);
+    return form;
   }
 
   // The "(define (f x) ...)" form defines an "f" symbol.
@@ -665,10 +671,6 @@ object *eval (object *form, object *env) {
   // Also undefined objects will he handled here.
   if (symbolp(form)) {
     const symbol_t name = form->name;
-    if (name == ELIST) {
-      dbg_show("== symbol (elist)", form);
-      return elist;
-    }
 
     // Find symbol's value in some environment.
     const object * pair = value(name, env);
