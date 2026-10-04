@@ -145,6 +145,12 @@ object * eff;
 // 100% Scheme-compliant. It's good enough approximation for now.
 #define variable_p(x) symbolp(x)
 
+// A macro that mimics SICP's "quoted?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
+// 100% Scheme-compliant. It's good enough approximation for now.
+#define quoted_p(tag) (symbolp(tag) && (tag)->name == QUOTE)
+
 // Debugging
 
 void dbg_show(const char * label, object * obj)
@@ -672,6 +678,8 @@ object *eval (object *form, object *env) {
     return form;
   }
 
+  object * expression = form;
+
   // The "(define (f x) ...)" form defines a "f" variable.
   // The "(define x ...)" form defines a "x" variable.
   // Also undefined objects will he handled here.
@@ -701,6 +709,15 @@ object *eval (object *form, object *env) {
   // Since it's neither something simple enough to be self-evaluating
   // expression, not it is a variable, then it must be a cons (or even a
   // list).
+
+  // SICP's implementation of predicates looks at "tag" of "tagged" list.
+  // This object is the tag - the first element of the list.
+  const object * const tag = car(expression);
+
+  if (quoted_p(tag)) {
+    dbg_show("== eval::quote", car(cdr(expression)));
+    return car(cdr(expression));
+  }
 
   object *function = car(form);
   object *args = cdr(form);
