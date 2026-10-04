@@ -139,6 +139,12 @@ object * eff;
 // implementation doesn't support them yet).
 #define self_evaluating_p(x) ((x) == elist || (x)->name == TEE || (x)->name == EFF)
 
+// A macro that mimics SICP's "variable?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
+// 100% Scheme-compliant. It's good enough approximation for now.
+#define variable_p(x) symbolp(x)
+
 // Debugging
 
 void dbg_show(const char * label, object * obj)
@@ -666,33 +672,36 @@ object *eval (object *form, object *env) {
     return form;
   }
 
-  // The "(define (f x) ...)" form defines an "f" symbol.
-  // The "(define x ...)" form defines an "x" symbol.
+  // The "(define (f x) ...)" form defines a "f" variable.
+  // The "(define x ...)" form defines a "x" variable.
   // Also undefined objects will he handled here.
-  if (symbolp(form)) {
+  if (variable_p(form)) {
     const symbol_t name = form->name;
 
     // Find symbol's value in some environment.
     const object * pair = value(name, env);
     if (pair != elist) {
-      dbg_show("== symbol (in local env)", form);
+      dbg_show("== eval::variable-local-env", form);
       return cdr(pair);
     }
     pair = value(name, GlobalEnv);
     if (pair != elist) {
-      dbg_show("== symbol (in global env)", form);
+      dbg_show("== eval::variable-global-env", form);
       return cdr(pair);
     }
 
     // Is the symbol a built-in symbol/function?
     if (name <= ENDFUNCTIONS) {
-      dbg_show("== symbol (built in)", form);
+      dbg_show("== eval::variable-built-in", form);
       return form;
     }
     error2(form, "undefined");
   }
 
-  // It's a list
+  // Since it's neither something simple enough to be self-evaluating
+  // expression, not it is a variable, then it must be a cons (or even a
+  // list).
+
   object *function = car(form);
   object *args = cdr(form);
 
