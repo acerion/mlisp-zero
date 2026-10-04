@@ -62,7 +62,13 @@ enum function {
 	ELIST,  // (), empty list
 	TEE,    // #t, #true
 	EFF,    // #f, #false
-	LAMBDA, SPECIAL_FORMS, QUOTE, DEFINE, SETQ, IF, FUNCTIONS, NOT,
+	LAMBDA,
+
+	SPECIAL_FORMS,
+	QUOTE,
+	DEFINE,
+	SET,       // set!
+	IF, FUNCTIONS, NOT,
 NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
@@ -150,6 +156,12 @@ object * eff;
 // TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
 // 100% Scheme-compliant. It's good enough approximation for now.
 #define quoted_p(tag) (symbolp(tag) && (tag)->name == QUOTE)
+
+// A macro that mimics SICP's "assignment?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
+// 100% Scheme-compliant. It's good enough approximation for now.
+#define assignment_p(tag) (symbolp(tag) && (tag)->name == SET)
 
 // Debugging
 
@@ -495,7 +507,7 @@ object * sp_define(object * args, object * env)
 	}
 }
 
-object *sp_setq (object *args, object *env) {
+object *sp_set (object *args, object *env) {
   object *arg = eval(second(args), env);
   object *pair = findvalue(first(args), env);
   cdr(pair) = arg;
@@ -580,7 +592,6 @@ const char string0[] PROGMEM = "symbols";
 const char string3[] PROGMEM = "lambda";
 const char string4[] PROGMEM = "special_forms";
 const char string5[] PROGMEM = "quote";
-const char string8[] PROGMEM = "setq";
 const char string9[] PROGMEM = "if";
 const char string10[] PROGMEM = "functions";
 const char string11[] PROGMEM = "not";
@@ -608,7 +619,7 @@ const tbl_entry_t lookup_table[] PROGMEM = {
   { string4, NULL, 0, 0 },
   { string5, sp_quote, 1, 1 },
   { "define",   sp_define, 0, 127 },
-  { string8, sp_setq, 2, 2 },
+  { "set!",     sp_set, 2, 2 },
   { string9, sp_if, 2, 3 },
   { string10, NULL, 0, 0 },
   { string11, fn_not, 1, 1 },
@@ -717,6 +728,14 @@ object *eval (object *form, object *env) {
   if (quoted_p(tag)) {
     dbg_show("== eval::quote", car(cdr(expression)));
     return car(cdr(expression));
+  }
+
+  if (assignment_p(tag)) {
+    dbg_show("== eval::set!", cdr(expression));
+    // First arg to sp_set() is a pair: variable being modified + an
+    // expression. Value of the expression will be evaluated and assigned to
+    // the variable.
+    return sp_set(cdr(expression), env);
   }
 
   object *function = car(form);
