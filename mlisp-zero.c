@@ -164,17 +164,21 @@ object * eff;
 #define assignment_p(tag) (symbolp(tag) && (tag)->name == SET)
 
 // Debugging
-
-void dbg_show(const char * label, object * obj)
+#if 1
+void dbg_show_fn(const char * label, object * obj)
 {
 	(void) label;
 	(void) obj;
-#if 1
+
 	printf("%s: ", label);
 	printobject(obj);
 	printf("\n");
-#endif
 }
+
+#define dbg_show(l, o) dbg_show_fn((l), (o))
+#else
+#define dbg_show(l, o)
+#endif
 
 // Set up workspace
 
