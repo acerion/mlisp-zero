@@ -5,7 +5,10 @@ all: x86 z80
 x86:
 	gcc -O2 -std=c11 \
 	-Wall -Wextra -pedantic -fanalyzer \
-	-Wundef \
+	-Wundef -Wshadow -Wmisleading-indentation -Wwrite-strings -Wbad-function-cast -Wlogical-op \
+	-Wuninitialized -Winit-self -Wimplicit-fallthrough -Warith-conversion -Wjump-misses-init \
+	-Wduplicated-cond -Wduplicated-branches \
+	-Wunused-macros -Wunused-result -Wunused \
 	-Wcast-qual -Wcast-align=strict \
 	mlisp-zero.c -o mlisp-zero
 

@@ -27,7 +27,7 @@
 
 #define first(x)           ((x)->car)
 #define second(x)          (car(cdr(x)))
-#define cddr(x)            (cdr(cdr(x)))
+//#define cddr(x)            (cdr(cdr(x)))
 #define third(x)           (car(cdr(cdr(x))))
 
 #define push(x, y)         ((y) = cons((x),(y)))
