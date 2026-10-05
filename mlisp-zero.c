@@ -42,16 +42,6 @@
 
 #define PROGMEM // Empty definition
 
-#ifdef SDCC
-int putchar(int c) { return c; }
-int getchar(void) { return 0; }
-void exit(int x)
-{
-	(void) x;
-	while (1);
-}
-#endif
-
 // Constants
 
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
@@ -133,6 +123,8 @@ void pfstring(const char * s);
 void pln();
 void printobject(object *form);
 object *read();
+
+void exit(int x);
 
 // Forward references
 object * tee;
