@@ -161,6 +161,12 @@ object * eff;
 // 100% Scheme-compliant. It's good enough approximation for now.
 #define definition_p(tag) (symbolp(tag) && (tag)->name == DEFINE)
 
+// A macro that mimics SICP's "lambda?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
+// 100% Scheme-compliant. It's good enough approximation for now.
+#define lambda_p(tag) (symbolp(tag) && (tag)->name == LAMBDA)
+
 // A macro that mimics SICP's "if?" predicate used in eval.
 //
 // TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
@@ -757,6 +763,14 @@ object *eval (object *form, object *env) {
     return sp_if(rem, env);
   }
 
+  if (lambda_p(tag)) {
+    if (env == elist) {
+      // Empty environment.
+      return form;
+    }
+    error("closures not supported");
+  }
+
   object *function = car(form);
   object *args = cdr(form);
 
@@ -764,19 +778,11 @@ object *eval (object *form, object *env) {
   if (symbolp(function)) {
     symbol_t name = function->name;
 
-    if (name == LAMBDA) {
-      if (env == elist) {
-        // Empty environment.
-        return form;
-      }
-      error("closures not supported");
-    }
-    
     if ((name > SPECIAL_FORMS) && (name < FUNCTIONS)) {
       return (lookupfn(name))(args, env);
     }
   }
-        
+
   // Evaluate the parameters - result in head
   object *fname = car(form);
   object *head = cons(eval(car(form), env), elist);
