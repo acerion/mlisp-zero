@@ -161,6 +161,12 @@ object * eff;
 // 100% Scheme-compliant. It's good enough approximation for now.
 #define definition_p(tag) (symbolp(tag) && (tag)->name == DEFINE)
 
+// A macro that mimics SICP's "if?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
+// 100% Scheme-compliant. It's good enough approximation for now.
+#define if_p(tag) (symbolp(tag) && (tag)->name == IF)
+
 // Debugging
 #if 1
 void dbg_show_fn(const char * label, object * obj)
@@ -744,6 +750,11 @@ object *eval (object *form, object *env) {
   if (definition_p(tag)) {
     dbg_show("== eval::define", rem);
     return sp_define(rem, env);
+  }
+
+  if (if_p(tag)) {
+    dbg_show("== eval::if", rem);
+    return sp_if(rem, env);
   }
 
   object *function = car(form);
