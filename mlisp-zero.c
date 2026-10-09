@@ -121,7 +121,7 @@ void pchar(char c);
 void pfl();
 void pfstring(const char * s);
 void pln();
-void printobject(object *form);
+void printobject(const object *form);
 object *read();
 
 void exit(int x);
@@ -279,19 +279,19 @@ void error2 (object *symbol, const char * string) {
 
 // Helper functions
 
-bool consp (object *x) {
+bool consp (const object *x) {
   if (x == NULL) return false;
   unsigned int type = x->type;
   return type >= PAIR || type == ZERO;
 }
 
-bool atom (object *x) {
+bool atom (const object *x) {
   if (x == NULL) return true;
   unsigned int type = x->type;
   return type < PAIR && type != ZERO;
 }
 
-bool listp (object *x) {
+bool listp (const object *x) {
   if (x == NULL) return true;
   unsigned int type = x->type;
   return type >= PAIR || type == ZERO;
@@ -319,7 +319,7 @@ bool valid40 (char *buffer) {
  return (toradix40(buffer[0]) >= 0 && toradix40(buffer[1]) >= 0 && toradix40(buffer[2]) >= 0);
 }
 
-const char *name (object *obj) {
+const char *name (const object *obj) {
   if(!symbolp(obj)) error("Error in name");
   symbol_t x = obj->name;
   if (x < ENDFUNCTIONS) return lookupbuiltin(x);
@@ -861,7 +861,7 @@ void pfl () {
   if (LastPrint != '\r') pchar('\r');
 }
 
-void printobject(object *form){
+void printobject(const object *form){
   if (form == elist) {
     pfstring("()");
   } else if (listp(form)) {
