@@ -155,6 +155,12 @@ object * eff;
 // 100% Scheme-compliant. It's good enough approximation for now.
 #define assignment_p(tag) (symbolp(tag) && (tag)->name == SET)
 
+// A macro that mimics SICP's "definition?" predicate used in eval.
+//
+// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
+// 100% Scheme-compliant. It's good enough approximation for now.
+#define definition_p(tag) (symbolp(tag) && (tag)->name == DEFINE)
+
 // Debugging
 #if 1
 void dbg_show_fn(const char * label, object * obj)
@@ -720,6 +726,7 @@ object *eval (object *form, object *env) {
   // SICP's implementation of predicates looks at "tag" of "tagged" list.
   // This object is the tag - the first element of the list.
   const object * const tag = car(expression);
+  object * const rem = cdr(expression); // Remainder of expression.
 
   if (quoted_p(tag)) {
     dbg_show("== eval::quote", car(cdr(expression)));
@@ -732,6 +739,11 @@ object *eval (object *form, object *env) {
     // expression. Value of the expression will be evaluated and assigned to
     // the variable.
     return sp_set(cdr(expression), env);
+  }
+
+  if (definition_p(tag)) {
+    dbg_show("== eval::define", cdr(expression));
+    return sp_define(rem, env);
   }
 
   object *function = car(form);
