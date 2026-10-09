@@ -729,20 +729,20 @@ object *eval (object *form, object *env) {
   object * const rem = cdr(expression); // Remainder of expression.
 
   if (quoted_p(tag)) {
-    dbg_show("== eval::quote", car(cdr(expression)));
-    return car(cdr(expression));
+    dbg_show("== eval::quote", car(rem));
+    return car(rem);
   }
 
   if (assignment_p(tag)) {
-    dbg_show("== eval::set!", cdr(expression));
+    dbg_show("== eval::set!", rem);
     // First arg to sp_set() is a pair: variable being modified + an
     // expression. Value of the expression will be evaluated and assigned to
     // the variable.
-    return sp_set(cdr(expression), env);
+    return sp_set(rem, env);
   }
 
   if (definition_p(tag)) {
-    dbg_show("== eval::define", cdr(expression));
+    dbg_show("== eval::define", rem);
     return sp_define(rem, env);
   }
 
