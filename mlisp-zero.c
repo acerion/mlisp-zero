@@ -175,7 +175,7 @@ object * eff;
 
 // Debugging
 #if 1
-void dbg_show_fn(const char * label, object * obj)
+void dbg_show_fn(const char * label, const object * obj)
 {
 	(void) label;
 	(void) obj;
