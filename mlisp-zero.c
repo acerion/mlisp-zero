@@ -173,6 +173,20 @@ object * eff;
 // 100% Scheme-compliant. It's good enough approximation for now.
 #define if_p(tag) (symbolp(tag) && (tag)->name == IF)
 
+// A macro that answers the same question as SICP's "primitive-procedure?"
+// predicate used in eval.
+//
+// The symbolp() predicate returns true when e.g. expr == "car" or
+// expr == "list", i.e. for built-in functions.
+#define primitive_procedure_p(expr) (symbolp(expr) && (((expr)->name) > FUNCTIONS) && (((expr)->name) < ENDFUNCTIONS))
+
+// A macro that answers the same question as SICP's "compound-procedure?"
+// predicate used in eval.
+//
+// Here the 'expr' is lambda expression of a compound procedure that
+// will be evaluated.
+#define compound_procedure_p(expr) (listp(expr) && issymbol(car(expr), LAMBDA))
+
 // Debugging
 #if 1
 void dbg_show_fn(const char * label, const object * obj)
@@ -811,13 +825,14 @@ object *eval (object *form, object *env) {
     form = cdr(form);
     nargs++;
   }
-    
+
   function = car(head);
   args = cdr(head);
- 
-  if (symbolp(function)) {
+
+  if (primitive_procedure_p(function)) {
+    dbg_show("== eval::primitive-procedure::fname", fname);
+    dbg_show("== eval::primitive-procedure::function", function);
     symbol_t name = function->name;
-    if (name >= ENDFUNCTIONS) error2(fname, "is not valid here");
     if (nargs<lookupmin(name)) error2(fname, "has too few arguments");
     if (nargs>lookupmax(name)) error2(fname, "has too many arguments");
     object *result = (lookupfn(name))(args, env);
@@ -825,16 +840,15 @@ object *eval (object *form, object *env) {
     return result;
   }
 
-  if (listp(function) && issymbol(car(function), LAMBDA)) {
-    // Here the 'function' is lambda expression of a compound procedure that
-    // will be evaluated, and 'args' are the actual args passed to the
-    // lambda.
+  if (compound_procedure_p(function)) {
+    dbg_show("== eval::compound-procedure::fname", fname);
+    dbg_show("== eval::compound-procedure::function", function);
     dropframe(0, &env);
     form = closure(fname, cdr(function), args, &env);
     pop(GCStack);
     return eval(form, env);
-  } 
-  
+  }
+
   error2(fname, "is an illegal function");
   return elist; // What we return after error2()'s longjmp() call doesn't really matter.
 }
