@@ -280,7 +280,7 @@ void error (const char * string) {
   longjmp(exception, 1);
 }
 
-void error2 (object *symbol, const char * string) {
+void error2 (const object * symbol, const char * string) {
   pfl(); pfstring("Error: ");
   if (symbol == NULL) pfstring("function ");
   else { pchar('\''); printobject(symbol); pfstring("' "); }
@@ -406,24 +406,37 @@ void dropframe (int tc, object **env) {
   }
 }
 
-// Handling closures
-  
-object *closure (object *fname, object *function, object *args, object **env) {
-  object *params = first(function);
-  function = cdr(function);
-  // Add arguments to environment
-  while (params != NULL && args != NULL) {
-    object *value;
-    object *var = first(params);
-    value = first(args);
-    args = cdr(args);
-    push(cons(var,value), *env);
+// Handle a closure: build its env and partially eval it through progn().
+//
+// @p fname is used only in debug messages.
+object * closure(const object * const fname, const object * const function, object * args, object ** env)
+{
+  // 'params' are function's formal arguments, e.g. x1 and x2 in
+  // "(define (f x1 x2) ...)".
+  //
+  // 'args' are actual values passed to function during a call,
+  // e.g. "(f 'a 'b)".
+  //
+  // The loop below zips the two lists together and extends env with the
+  // "(x1 . 'a)", "(x2 . 'b)" conses.
+
+  // Add arguments to environment.
+  const object * params = first(function);
+  while (params != elist && args != elist) {
+    object * var = first(params);
+    object * value = first(args);
+    push(cons(var, value), *env);
+
+    // Fetch candidates for next pair.
     params = cdr(params);
+    args = cdr(args);
   }
-  if (params != NULL) error2(fname, "has too few parameters");
-  if (args != NULL) error2(fname, "has too many parameters");
+  if (params != elist) error2(fname, "received too few args");
+  if (args != elist) error2(fname, "received too many args");
+
   // Do an implicit progn
-  return progn(function, *env);
+  object * form = cdr(function);
+  return progn(form, *env);
 }
 
 // Checked car and cdr
@@ -771,7 +784,7 @@ object *eval (object *form, object *env) {
     error("closures not supported");
   }
 
-  object *function = car(form);
+  const object * function = car(form);
   object *args = cdr(form);
 
   // List starts with a symbol?
@@ -784,7 +797,7 @@ object *eval (object *form, object *env) {
   }
 
   // Evaluate the parameters - result in head
-  object *fname = car(form);
+  const object * fname = car(form);
   object *head = cons(eval(car(form), env), elist);
   push(head, GCStack); // Don't GC the result list
   object *tail = head;
@@ -811,8 +824,11 @@ object *eval (object *form, object *env) {
     pop(GCStack);
     return result;
   }
-      
+
   if (listp(function) && issymbol(car(function), LAMBDA)) {
+    // Here the 'function' is lambda expression of a compound procedure that
+    // will be evaluated, and 'args' are the actual args passed to the
+    // lambda.
     dropframe(0, &env);
     form = closure(fname, cdr(function), args, &env);
     pop(GCStack);
