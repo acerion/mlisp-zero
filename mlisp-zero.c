@@ -20,8 +20,7 @@
 
 // C Macros
 
-#define nil                NULL   // uLisp's "()"
-#define elist              nil    // Scheme's "empty list". Defined to be "nil" only until "nil" is gone. See also "#define ELIST"
+#define elist              NULL    // Scheme's "empty list".
 #define car(x)             ((x)->car)
 #define cdr(x)             ((x)->cdr)
 
@@ -109,7 +108,7 @@ object *Freelist;
 // A list that will be initially empty (initialized with ()).
 object * GlobalEnv;
 
-object *GCStack = NULL;
+object *GCStack = elist;
 char LastChar = 0;
 char LastPrint = 0;
 volatile char Escape = 0;
@@ -306,19 +305,19 @@ void error2 (const object * symbol, const char * string) {
 // Helper functions
 
 bool consp (const object *x) {
-  if (x == NULL) return false;
+  if (x == elist) return false;
   unsigned int type = x->type;
   return type >= PAIR || type == ZERO;
 }
 
 bool atom (const object *x) {
-  if (x == NULL) return true;
+  if (x == elist) return true;
   unsigned int type = x->type;
   return type < PAIR && type != ZERO;
 }
 
 bool listp (const object *x) {
-  if (x == NULL) return true;
+  if (x == elist) return true;
   unsigned int type = x->type;
   return type >= PAIR || type == ZERO;
 }
@@ -368,10 +367,10 @@ int eq (object *arg1, object *arg2) {
 }
 
 object *progn (object *args, object *env) {
-  if (args == NULL) return nil;
+  if (args == elist) return elist;
   object *more = cdr(args);
-  while (more != NULL) {
-  eval(car(args), env);
+  while (more != elist) {
+    eval(car(args), env);
     args = more;
     more = cdr(args);
   }
@@ -385,7 +384,7 @@ object *value (symbol_t n, object *env) {
   // the list.
   while (env != elist) {
     object *pair = car(env);
-    if (pair != NULL && car(pair)->name == n) return pair;
+    if (pair != elist && car(pair)->name == n) return pair;
     env = cdr(env);
   }
   return elist; // Variable not found.
@@ -404,7 +403,7 @@ object *findtwin (object *var, object *env) {
   // the list.
   while (env != elist) {
     object *pair = car(env);
-    if (pair != NULL && car(pair) == var) return pair;
+    if (pair != elist && car(pair) == var) return pair;
     env = cdr(env);
   }
   return elist; // Variable not found.
@@ -412,7 +411,7 @@ object *findtwin (object *var, object *env) {
 
 void dropframe (int tc, object **env) {
   if (tc) {
-    while (*env != elist && car(*env) != NULL) {
+    while (*env != elist && car(*env) != elist) {
       pop(*env);
     }
   } else {
@@ -556,7 +555,7 @@ object *sp_set (object *args, object *env) {
 }
 
 object *sp_if (object *args, object *env) {
-  if (eval(first(args), env) != nil) return eval(second(args), env);
+  if (eval(first(args), env) != elist) return eval(second(args), env);
   return eval(third(args), env);
 }
 
@@ -564,7 +563,7 @@ object *sp_if (object *args, object *env) {
 
 object *fn_not (object *args, object *env) {
   (void) env;
-  return (first(args) == nil) ? tee : nil;
+  return (first(args) == elist) ? tee : elist;
 }
 
 object *fn_cons (object *args, object *env) {
@@ -574,27 +573,27 @@ object *fn_cons (object *args, object *env) {
 
 object *fn_atom (object *args, object *env) {
   (void) env;
-  return atom(first(args)) ? tee : nil;
+  return atom(first(args)) ? tee : elist;
 }
 
 object *fn_listp (object *args, object *env) {
   (void) env;
-  return listp(first(args)) ? tee : nil;
+  return listp(first(args)) ? tee : elist;
 }
 
 object *fn_consp (object *args, object *env) {
   (void) env;
-  return consp(first(args)) ? tee : nil;
+  return consp(first(args)) ? tee : elist;
 }
 
 object *fn_symbolp (object *args, object *env) {
   (void) env;
-  return symbolp(first(args)) ? tee : nil;
+  return symbolp(first(args)) ? tee : elist;
 }
 
 object *fn_eq (object *args, object *env) {
   (void) env;
-  return eq(first(args), second(args)) ? tee : nil;
+  return eq(first(args), second(args)) ? tee : elist;
 }
 
 // List functions
@@ -818,7 +817,7 @@ object *eval (object *form, object *env) {
   form = cdr(form);
   int nargs = 0;
 
-  while (form != NULL) {
+  while (form != elist) {
     object *obj = cons(eval(car(form),env), elist);
     cdr(tail) = obj;
     tail = obj;
@@ -915,12 +914,12 @@ void printobject(const object *form){
     pchar('(');
     printobject(car(form));
     form = cdr(form);
-    while (form != NULL && listp(form)) {
+    while (form != elist && listp(form)) {
       pchar(' ');
       printobject(car(form));
       form = cdr(form);
     }
-    if (form != NULL) {
+    if (form != elist) {
       pfstring(" . ");
       printobject(form);
     }
@@ -985,11 +984,11 @@ object *nextitem() {
 object *readrest() {
   object *item = nextitem();
 
-  if(item == (object *)KET) return NULL;
+  if(item == (object *)KET) return elist;
   
   if(item == (object *)DOT) {
     object *arg1 = read();
-    if (readrest() != NULL) error("Malformed list");
+    if (readrest() != elist) error("Malformed list");
     return arg1;
   }
 
@@ -1028,7 +1027,7 @@ void setup() {
 
 void repl(object *env) {
   for (;;) {
-    gc(NULL, env);
+    gc(elist, env);
     pint(Freespace);
     pfstring("> ");
     object *line = read();
@@ -1048,7 +1047,7 @@ int main(void)
 {
 	setup();
 	setjmp(exception);
-	repl(NULL);
+	repl(elist);
 
 	return 0;
 }
