@@ -623,55 +623,39 @@ object *fn_locals (object *args, object *env) {
   return env;
 }
 
-// Built-in procedures.
-
-const char string0[] = "symbols";
-const char string3[] = "lambda";
-const char string4[] = "special_forms";
-const char string5[] = "quote";
-const char string9[] = "if";
-const char string10[] = "functions";
-const char string11[] = "not";
-const char string12[] = "null";
-const char string13[] = "cons";
-const char string14[] = "atom";
-const char string15[] = "listp";
-const char string16[] = "consp";
-const char string17[] = "symbolp";
-const char string18[] = "eq";
-const char string19[] = "car";
-const char string20[] = "cdr";
-const char string21[] = "eval";
-const char string22[] = "globals";
-const char string23[] = "locals";
-
+// Built-in elements of language, including built in procedures (so called
+// primitive procedures).
 const tbl_entry_t lookup_table[] = {
-  { string0, NULL, 0, 0 },
+  { "symbols",   NULL, 0, 0 },
   // TODO (acerion) 2026.10.03: I'm not 100% sure if empty list deserves its
   // own entry in this table.
-  { "()",       NULL, 0, 0 }, // elist
-  { "#t",       NULL, 1, 0 }, // tee
-  { "#f",       NULL, 1, 0 }, // eff
-  { string3, NULL, 0, 127 },
-  { string4, NULL, 0, 0 },
-  { string5, sp_quote, 1, 1 },
-  { "define",   sp_define, 0, 127 },
-  { "set!",     sp_set, 2, 2 },
-  { string9, sp_if, 2, 3 },
-  { string10, NULL, 0, 0 },
-  { string11, fn_not, 1, 1 },
-  { string12, fn_not, 1, 1 },
-  { string13, fn_cons, 2, 2 },
-  { string14, fn_atom, 1, 1 },
-  { string15, fn_listp, 1, 1 },
-  { string16, fn_consp, 1, 1 },
-  { string17, fn_symbolp, 1, 1 },
-  { string18, fn_eq, 2, 2 },
-  { string19, fn_car, 1, 1 },
-  { string20, fn_cdr, 1, 1 },
-  { string21, fn_eval, 1, 1 },
-  { string22, fn_globals, 0, 0 },
-  { string23, fn_locals, 0, 0 },
+  { "()",        NULL,       0, 0 }, // elist
+  { "#t",        NULL,       1, 0 }, // tee
+  { "#f",        NULL,       1, 0 }, // eff
+
+  { "lambda",    NULL,       0, 127 },
+
+  { "special_forms", NULL,   0, 0 },
+  { "quote",     sp_quote,   1, 1 },
+  { "define",    sp_define,  0, 127 },
+  { "set!",      sp_set,     2, 2 },
+  { "if",        sp_if,      2, 3 },
+
+  { "functions", NULL,       0, 0 },
+  { "not",       fn_not,     1, 1 },
+  { "null",      fn_not,     1, 1 },
+  { "cons",      fn_cons,    2, 2 },
+  { "atom",      fn_atom,    1, 1 },
+  { "listp",     fn_listp,   1, 1 },
+  { "consp",     fn_consp,   1, 1 },
+  { "symbolp",   fn_symbolp, 1, 1 },
+  { "eq",        fn_eq,      2, 2 },
+  { "car",       fn_car,     1, 1 },
+  { "cdr",       fn_cdr,     1, 1 },
+  { "eval",      fn_eval,    1, 1 },
+
+  { "globals",   fn_globals, 0, 0 },
+  { "locals",    fn_locals,  0, 0 },
 };
 
 // Table lookup functions
