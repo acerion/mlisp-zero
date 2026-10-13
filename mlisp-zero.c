@@ -39,8 +39,6 @@
 #define marked(x)          ((((uintptr_t)(car(x))) & MARKBIT) != 0)
 #define MARKBIT            1
 
-#define PROGMEM // Empty definition
-
 // Constants
 
 enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
@@ -625,31 +623,29 @@ object *fn_locals (object *args, object *env) {
   return env;
 }
 
-// Insert your own function definitions here
+// Built-in procedures.
 
-// Built-in procedure names - stored in PROGMEM
+const char string0[] = "symbols";
+const char string3[] = "lambda";
+const char string4[] = "special_forms";
+const char string5[] = "quote";
+const char string9[] = "if";
+const char string10[] = "functions";
+const char string11[] = "not";
+const char string12[] = "null";
+const char string13[] = "cons";
+const char string14[] = "atom";
+const char string15[] = "listp";
+const char string16[] = "consp";
+const char string17[] = "symbolp";
+const char string18[] = "eq";
+const char string19[] = "car";
+const char string20[] = "cdr";
+const char string21[] = "eval";
+const char string22[] = "globals";
+const char string23[] = "locals";
 
-const char string0[] PROGMEM = "symbols";
-const char string3[] PROGMEM = "lambda";
-const char string4[] PROGMEM = "special_forms";
-const char string5[] PROGMEM = "quote";
-const char string9[] PROGMEM = "if";
-const char string10[] PROGMEM = "functions";
-const char string11[] PROGMEM = "not";
-const char string12[] PROGMEM = "null";
-const char string13[] PROGMEM = "cons";
-const char string14[] PROGMEM = "atom";
-const char string15[] PROGMEM = "listp";
-const char string16[] PROGMEM = "consp";
-const char string17[] PROGMEM = "symbolp";
-const char string18[] PROGMEM = "eq";
-const char string19[] PROGMEM = "car";
-const char string20[] PROGMEM = "cdr";
-const char string21[] PROGMEM = "eval";
-const char string22[] PROGMEM = "globals";
-const char string23[] PROGMEM = "locals";
-
-const tbl_entry_t lookup_table[] PROGMEM = {
+const tbl_entry_t lookup_table[] = {
   { string0, NULL, 0, 0 },
   // TODO (acerion) 2026.10.03: I'm not 100% sure if empty list deserves its
   // own entry in this table.
