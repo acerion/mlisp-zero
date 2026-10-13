@@ -115,6 +115,7 @@ volatile char Escape = 0;
 
 void error(const char * string);
 object *eval(object *form, object *env);
+object * apply(object * form, object *env);
 const char * lookupbuiltin(symbol_t name);
 void pchar(char c);
 void pfl();
@@ -809,6 +810,17 @@ object *eval (object *form, object *env) {
     }
   }
 
+  // My naive understanding is that after self-evaluating expressions,
+  // variables and special forms are handled, the only two things remain:
+  // application and error.
+  //
+  // So let's have something that resembles apply() here.
+
+  return apply(form, env);
+}
+
+object * apply(object * form, object *env)
+{
   // Evaluate the parameters - result in head
   const object * fname = car(form);
   object *head = cons(eval(car(form), env), elist);
@@ -825,12 +837,12 @@ object *eval (object *form, object *env) {
     nargs++;
   }
 
-  function = car(head);
-  args = cdr(head);
+  object * function = car(head);
+  object * args = cdr(head);
 
   if (primitive_procedure_p(function)) {
-    dbg_show("== eval::primitive-procedure::fname", fname);
-    dbg_show("== eval::primitive-procedure::function", function);
+    dbg_show("== apply::primitive-procedure::fname", fname);
+    dbg_show("== apply::primitive-procedure::function", function);
     symbol_t name = function->name;
     if (nargs<lookupmin(name)) error2(fname, "has too few arguments");
     if (nargs>lookupmax(name)) error2(fname, "has too many arguments");
@@ -840,15 +852,15 @@ object *eval (object *form, object *env) {
   }
 
   if (compound_procedure_p(function)) {
-    dbg_show("== eval::compound-procedure::fname", fname);
-    dbg_show("== eval::compound-procedure::function", function);
+    dbg_show("== apply::compound-procedure::fname", fname);
+    dbg_show("== apply::compound-procedure::function", function);
     dropframe(0, &env);
     form = closure(fname, cdr(function), args, &env);
     pop(GCStack);
     return eval(form, env);
   }
 
-  error2(fname, "is an illegal function");
+  error2(fname, "apply: illegal function");
   return elist; // What we return after error2()'s longjmp() call doesn't really matter.
 }
 
