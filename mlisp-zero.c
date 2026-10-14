@@ -1012,7 +1012,7 @@ void initenv() {
 void setup() {
   initworkspace();
   initenv();
-  pfstring("mlisp-zero v1.0"); pln();
+  pfstring("mlisp-zero v2.0"); pln();
 }
 
 // Read/Evaluate/Print loop
