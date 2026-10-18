@@ -88,11 +88,10 @@ typedef struct {
 } tbl_entry_t;
 
 // Workspace - sizes in bytes
-#define WORDALIGNED
 #define BUFFERSIZE 18
 #define WORKSPACESIZE 320            /* Cells (4*bytes) */
 
-object Workspace[WORKSPACESIZE] WORDALIGNED;
+object Workspace[WORKSPACESIZE];
 char Buffer[BUFFERSIZE];
 
 // Global variables
