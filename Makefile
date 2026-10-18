@@ -3,6 +3,7 @@
 all: x86 z80
 
 x86:
+	mkdir -p build/x86/
 	gcc -O2 -std=c11 \
 	-Wall -Wextra -pedantic -fanalyzer \
 	-Wundef -Wshadow -Wmisleading-indentation -Wwrite-strings -Wbad-function-cast -Wlogical-op \
@@ -10,15 +11,15 @@ x86:
 	-Wduplicated-cond -Wduplicated-branches \
 	-Wunused-macros -Wunused-result -Wunused \
 	-Wcast-qual -Wcast-align=strict \
-	mlisp-zero.c -o mlisp-zero
+	mlisp-zero.c -o build/x86/mlisp-zero
 
 z80:
-	mkdir -p z80_build
-	sdcc -mz80 -o z80_build/ -c z80/crt0_x86.c
-	sdcc -mz80 -o z80_build/ -c mlisp-zero.c
-	sdcc -mz80 --no-std-crt0 -o z80_build/mlisp-zero.ihx z80_build/crt0_x86.rel z80_build/mlisp-zero.rel
+	mkdir -p build/z80/
+	sdcc -mz80 -o build/z80/ -c z80/crt0_x86.c
+	sdcc -mz80 -o build/z80/ -c mlisp-zero.c
+	sdcc -mz80 --no-std-crt0 -o build/z80/mlisp-zero.ihx build/z80/crt0_x86.rel build/z80/mlisp-zero.rel
 
 clean:
 	rm -rf mlisp-zero
-	rm -rf z80_build/
+	rm -rf build
 
