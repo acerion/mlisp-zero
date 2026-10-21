@@ -102,12 +102,20 @@ char ReturnFlag = 0;
 object *Freelist;
 //extern uint8_t _end;
 
-// A list that will be initially empty (initialized with ()).
-object * GlobalEnv;
+// Global environment. "association list of all the globally-defined
+// variables and functions." (per http://www.ulisp.com/show?1BD3). A list
+// that will be initially empty (initialized with ()).
+static object * GlobalEnv;
 
-object *GCStack = elist;
+// "used to push temporary structures that need to be protected from garbage
+// collection during evaluation." (per http://www.ulisp.com/show?1BD3).
+static object * GCStack = elist;
+
 char LastChar = 0;
 char LastPrint = 0;
+
+// On some HW platforms pressing a physical button sets this flag and can
+// abort currently ongoing evaluation.
 volatile char Escape = 0;
 
 void error(const char * string);
