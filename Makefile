@@ -6,7 +6,7 @@ all: x86 z80
 
 
 
-X86_CFLAGS = -O2 -std=c11 \
+X86_CFLAGS = -O1 -ggdb -std=c11 \
 	-Wall -Wextra -pedantic -fanalyzer \
 	-Wundef -Wshadow -Wmisleading-indentation -Wwrite-strings -Wbad-function-cast -Wlogical-op \
 	-Wuninitialized -Winit-self -Wimplicit-fallthrough -Warith-conversion -Wjump-misses-init \
