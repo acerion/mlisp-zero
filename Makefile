@@ -75,3 +75,4 @@ Z80_LDFLAGS = -mz80 --no-std-crt0
 clean:
 	rm -rf build
 	rm -rf compile_commands.json
+	rm -rf ./cache/
