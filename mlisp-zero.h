@@ -19,3 +19,7 @@ typedef struct sobject {
     };
   };
 } object;
+
+
+void printobject(const object * form);
+

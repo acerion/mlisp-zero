@@ -110,7 +110,6 @@ void pchar(char c);
 void pfl();
 void pfstring(const char * s);
 void pln();
-void printobject(const object *form);
 object *read();
 
 void exit(int x);
@@ -175,23 +174,6 @@ object * eff;
 // Here the 'expr' is lambda expression of a compound procedure that
 // will be evaluated.
 #define compound_procedure_p(expr) (listp(expr) && issymbol(car(expr), LAMBDA))
-
-// Debugging
-#if 1
-void dbg_show_fn(const char * label, const object * obj)
-{
-	(void) label;
-	(void) obj;
-
-	printf("%s: ", label);
-	printobject(obj);
-	printf("\n");
-}
-
-#define dbg_show(l, o) dbg_show_fn((l), (o))
-#else
-#define dbg_show(l, o)
-#endif
 
 // Set up workspace
 

@@ -34,3 +34,15 @@ void dbg_object_fn(const char * label, const object * const o)
 		break;
 	}
 }
+
+
+void dbg_show_fn(const char * label, const object * obj)
+{
+	(void) label;
+	(void) obj;
+
+	printf("%s: ", label);
+	printobject(obj);
+	printf("\n");
+}
+
