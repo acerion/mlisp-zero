@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "debug.h"
+#include "mlisp-zero.h"
+
 // C Macros
 
 #define elist              NULL    // Scheme's "empty list".
@@ -41,7 +44,6 @@
 
 // Constants
 
-enum type { ZERO=0, SYMBOL=2, PAIR=4 };  // PAIR must be last
 enum token { UNUSED, BRA, KET, QUO, DOT };
 
 enum function {
@@ -59,24 +61,6 @@ enum function {
 NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
-
-typedef unsigned int symbol_t;
-
-typedef struct sobject {
-  union {
-    struct {
-      struct sobject *car;
-      struct sobject *cdr;
-    };
-    struct {
-      unsigned int type;
-      union {
-        symbol_t name;
-        int integer;
-      };
-    };
-  };
-} object;
 
 typedef object *(*fn_ptr_type)(object *, object *);
 
@@ -716,6 +700,8 @@ object *eval (object *form, object *env) {
     dbg_show("== eval::self-evaluating", form);
     return form;
   }
+
+  dbg_object("form", form);
 
   object * expression = form;
 
