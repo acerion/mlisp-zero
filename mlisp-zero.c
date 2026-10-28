@@ -527,6 +527,7 @@ object *sp_set (object *args, object *env) {
 }
 
 object *sp_if (object *args, object *env) {
+  dbg_obj_mem(0, args);
   if (eval(first(args), env) != elist) return eval(second(args), env);
   return eval(third(args), env);
 }
@@ -683,7 +684,7 @@ object *eval (object *form, object *env) {
     return form;
   }
 
-  dbg_object("form", form);
+  dbg_object(0, "form", form);
 
   object * expression = form;
 
