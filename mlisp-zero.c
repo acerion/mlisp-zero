@@ -914,7 +914,12 @@ int gchar () {
   return temp;
 }
 
-object *nextitem() {
+// Get a single whole ~token: paren, dot, quote, symbol name, etc.
+//
+// The thing returned by this function is not necessarily a proper object
+// because BRA/KET/QUO/DOT are not proper objects.
+object * next_single_item(void)
+{
   int ch = gchar();
   while(isspace(ch)) ch = gchar();
 
@@ -945,7 +950,7 @@ object *nextitem() {
 
   int x = builtin(Buffer);
   if (x == ELIST) {
-    dbg_show("== nextitem(): empty-list", elist);
+    dbg_show("== next_single_item(): empty-list", elist);
     return elist;
   }
   if (x < ENDFUNCTIONS) return symbol(x);
@@ -954,29 +959,47 @@ object *nextitem() {
   return elist; // What we return after error()'s longjmp() call doesn't really matter.
 }
 
-object *readrest() {
-  object *item = nextitem();
+// Called primarily when opening brace is encountered, and reads the 'rest'
+// of expression until matching closing bracket.
+object * read_rest(void)
+{
+  object * item = next_single_item();
 
-  if(item == (object *)KET) return elist;
-  
-  if(item == (object *)DOT) {
-    object *arg1 = read();
-    if (readrest() != elist) error("Malformed list");
+  if (item == (object *) KET) {
+    // KET object doesn't necessarily mean that user entered empty list, but
+    // it means that current parenthesized form is finished, and that the
+    // (recursive) call to read_rest() now has to complete its job and return
+    // its results. '()' is a last element of a whole form read by
+    // (recursive) read_rest() calls.
+    return elist;
+  }
+
+  if (item == (object *) DOT) {
+    object * arg1 = read(); // This probably reads cdr of dotted pair.
+    if (read_rest() != elist) {
+      error("Malformed list");
+    }
     return arg1;
   }
 
-  if(item == (object *)QUO) {
-    object *arg1 = read();
-    return cons(cons(symbol(QUOTE), cons(arg1, elist)), readrest());
+  if (item == (object *) QUO) {
+    // Read quoted expression.
+    object * arg1 = read();
+    return cons(cons(symbol(QUOTE), cons(arg1, elist)), read_rest());
   }
-   
-  if(item == (object *)BRA) item = readrest(); 
-  return cons(item, readrest());
+
+  if (item == (object *) BRA) {
+    // Start of new form. Read the rest of it, perhaps another expression starting with '('.
+    item = read_rest();
+  }
+
+  // Something else than BRA/QUO/KET/DOT: put it in list, and continue reading.
+  return cons(item, read_rest());
 }
 
 object *read() {
-  object *item = nextitem();
-  if (item == (object *)BRA) return readrest();
+  object * item = next_single_item();
+  if (item == (object *)BRA) return read_rest();
   if (item == (object *)DOT) return read();
   if (item == (object *)QUO) return cons(symbol(QUOTE), cons(read(), elist));
   return item;
