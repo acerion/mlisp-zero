@@ -96,7 +96,6 @@ static object * GlobalEnv;
 static object * GCStack = elist;
 
 char LastChar = 0;
-char LastPrint = 0;
 
 // On some HW platforms pressing a physical button sets this flag and can
 // abort currently ongoing evaluation.
@@ -107,10 +106,9 @@ object *eval(object *form, object *env);
 object * apply(object * form, object *env);
 const char * lookupbuiltin(symbol_t name);
 void pchar(char c);
-void pfl();
 void pfstring(const char * s);
-void pln();
 object *read();
+void newline(void);
 
 void exit(int x);
 
@@ -258,18 +256,25 @@ void gc (object *form, object *env) {
 
 // Error handling
 
-void error (const char * string) {
-  pfl(); pfstring("Error: ");
-  pfstring(string); pln();
+void error (const char * string)
+{
+  newline();
+  pfstring("Error: ");
+  pfstring(string);
+  newline();
+
   GCStack = NULL;
   longjmp(exception, 1);
 }
 
 void error2 (const object * symbol, const char * string) {
-  pfl(); pfstring("Error: ");
+  newline();
+  pfstring("Error: ");
   if (symbol == NULL) pfstring("function ");
   else { pchar('\''); printobject(symbol); pfstring("' "); }
-  pfstring(string); pln();
+  pfstring(string);
+  newline();
+
   GCStack = NULL;
   longjmp(exception, 1);
 }
@@ -822,10 +827,13 @@ object * apply(object * form, object *env)
 
 // Print functions
 
-void pchar (char c) {
-  LastPrint = c;
-  putchar(c);
-  if (c == '\r') putchar('\n');
+void pchar(char c)
+{
+	if (c == '\r') {
+		c = '\n';
+	}
+
+	putchar(c);
 }
 
 void pstring(const char * s)
@@ -867,12 +875,9 @@ void pint (int i) {
   }
 }
 
-void pln () {
-  pchar('\r');
-}
-
-void pfl () {
-  if (LastPrint != '\r') pchar('\r');
+void newline(void)
+{
+	pchar('\n');
 }
 
 void printobject(const object *form){
@@ -988,7 +993,8 @@ void initenv() {
 void setup() {
   initworkspace();
   initenv();
-  pfstring("mlisp-zero v2.0"); pln();
+  pfstring("mlisp-zero v2.0");
+  newline();
 }
 
 // Read/Evaluate/Print loop
@@ -1001,13 +1007,14 @@ void repl(object *env) {
     object *line = read();
     if (line == (object *)KET) error("Unmatched right bracket");
     push(line, GCStack);
-    pfl();
+
     line = eval(line, env);
-    pfl();
+
+    newline();
     printobject(line);
+    newline();
+
     pop(GCStack);
-    pfl();
-    pln();
   }
 }
 
