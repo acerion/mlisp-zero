@@ -948,10 +948,21 @@ object * next_single_item(void)
   if (ch == ')') LastChar = ')';
   if (ch == '(') LastChar = '(';
 
-  int x = builtin(Buffer);
-  if (x == ELIST) {
+  const int x = builtin(Buffer);
+  switch (x) {
+  case ELIST:
     dbg_show("== next_single_item(): empty-list", elist);
+    // Return 'empty list' singleton.
     return elist;
+  case TEE:
+    // Return '#t' singleton.
+    return tee;
+  case EFF:
+    // Return '#f' singleton.
+    return eff;
+  default:
+    // Fall-through to building and returning new symbol object.
+    ;
   }
   if (x < ENDFUNCTIONS) return symbol(x);
   else if (index < 4 && valid40(Buffer)) return symbol(pack40(Buffer));
