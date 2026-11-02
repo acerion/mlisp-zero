@@ -531,17 +531,26 @@ object *sp_set (object *args, object *env) {
   return arg;
 }
 
-object *sp_if (object *args, object *env) {
+object * sp_if(object * args, object * env)
+{
   dbg_obj_mem(0, args);
-  if (eval(first(args), env) != elist) return eval(second(args), env);
-  return eval(third(args), env);
+  if (eval(first(args), env) != eff) {
+    return eval(second(args), env);
+  } else {
+    return eval(third(args), env);
+  }
 }
 
 // Core functions
 
 object *fn_not (object *args, object *env) {
   (void) env;
-  return (first(args) == elist) ? tee : elist;
+  return (first(args) == eff) ? tee : eff;
+}
+
+object *fn_null (object *args, object *env) {
+  (void) env;
+  return (first(args) == elist) ? tee : eff;
 }
 
 object *fn_cons (object *args, object *env) {
@@ -551,27 +560,27 @@ object *fn_cons (object *args, object *env) {
 
 object *fn_atom (object *args, object *env) {
   (void) env;
-  return atom(first(args)) ? tee : elist;
+  return atom(first(args)) ? tee : eff;
 }
 
 object *fn_listp (object *args, object *env) {
   (void) env;
-  return listp(first(args)) ? tee : elist;
+  return listp(first(args)) ? tee : eff;
 }
 
 object *fn_consp (object *args, object *env) {
   (void) env;
-  return consp(first(args)) ? tee : elist;
+  return consp(first(args)) ? tee : eff;
 }
 
 object *fn_symbolp (object *args, object *env) {
   (void) env;
-  return symbolp(first(args)) ? tee : elist;
+  return symbolp(first(args)) ? tee : eff;
 }
 
 object *fn_eq (object *args, object *env) {
   (void) env;
-  return eq(first(args), second(args)) ? tee : elist;
+  return eq(first(args), second(args)) ? tee : eff;
 }
 
 // List functions
@@ -622,7 +631,7 @@ const tbl_entry_t lookup_table[] = {
 
   { "functions", NULL,       0, 0 },
   { "not",       fn_not,     1, 1 },
-  { "null",      fn_not,     1, 1 },
+  { "null",      fn_null,    1, 1 },
   { "cons",      fn_cons,    2, 2 },
   { "atom",      fn_atom,    1, 1 },
   { "listp",     fn_listp,   1, 1 },
@@ -1027,7 +1036,7 @@ void initenv() {
 void setup() {
   initworkspace();
   initenv();
-  pfstring("mlisp-zero v2.0");
+  pfstring("mlisp-zero v3.0.0");
   newline();
 }
 
