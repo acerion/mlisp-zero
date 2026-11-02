@@ -58,7 +58,10 @@ enum function {
 	DEFINE,
 	SET,       // set!
 	IF, FUNCTIONS, NOT,
-NULLFN, CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
+
+	NULLP,    // null?
+
+	CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
 
@@ -548,7 +551,7 @@ object *fn_not (object *args, object *env) {
   return (first(args) == eff) ? tee : eff;
 }
 
-object *fn_null (object *args, object *env) {
+object *fn_nullp (object *args, object *env) {
   (void) env;
   return (first(args) == elist) ? tee : eff;
 }
@@ -631,7 +634,10 @@ const tbl_entry_t lookup_table[] = {
 
   { "functions", NULL,       0, 0 },
   { "not",       fn_not,     1, 1 },
-  { "null",      fn_null,    1, 1 },
+
+  // Type predicates. r7rs chapter "3.2. Disjointness of types".
+  { "null?",     fn_nullp,   1, 1 },
+
   { "cons",      fn_cons,    2, 2 },
   { "atom",      fn_atom,    1, 1 },
   { "listp",     fn_listp,   1, 1 },
