@@ -3,9 +3,9 @@
 enum type {
 	ZERO=0,
 	T_BOOLEAN    = 2,
-	SYMBOL=4,
-	PAIR=8
-};  // PAIR must be last
+	T_SYMBOL     = 4,
+	PAIR=8  // PAIR must be last
+};
 
 typedef unsigned int symbol_t;
 

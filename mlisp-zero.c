@@ -36,7 +36,7 @@
 #define pop(y)             ((y) = cdr(y))
 
 #define booleanp(obj)      (((obj) != NULL) && ((obj)->type == T_BOOLEAN))
-#define symbolp(x)         ((x)->type == SYMBOL)
+#define symbolp(obj)       (((obj) != NULL) && ((obj)->type == T_SYMBOL))
 
 #define mark(x)            (car(x) = (object *)(((uintptr_t)(car(x))) | MARKBIT))
 #define unmark(x)          (car(x) = (object *)(((uintptr_t)(car(x))) & ~MARKBIT))
@@ -62,8 +62,9 @@ enum function {
 
 	BOOLEANP,     // boolean?
 	NULLP,        // null?
+	SYMBOLP,      // symbol?
 
-	CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
+	CONS, ATOM, LISTP, CONSP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
 
@@ -129,39 +130,21 @@ object * eff;
 #define self_evaluating_p(obj) ((obj) == elist || booleanp(obj))
 
 // A macro that mimics SICP's "variable?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
-// 100% Scheme-compliant. It's good enough approximation for now.
 #define variable_p(x) symbolp(x)
 
 // A macro that mimics SICP's "quoted?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
-// 100% Scheme-compliant. It's good enough approximation for now.
 #define quoted_p(tag) (symbolp(tag) && (tag)->name == QUOTE)
 
 // A macro that mimics SICP's "assignment?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
-// 100% Scheme-compliant. It's good enough approximation for now.
 #define assignment_p(tag) (symbolp(tag) && (tag)->name == SET)
 
 // A macro that mimics SICP's "definition?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
-// 100% Scheme-compliant. It's good enough approximation for now.
 #define definition_p(tag) (symbolp(tag) && (tag)->name == DEFINE)
 
 // A macro that mimics SICP's "lambda?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
-// 100% Scheme-compliant. It's good enough approximation for now.
 #define lambda_p(tag) (symbolp(tag) && (tag)->name == LAMBDA)
 
 // A macro that mimics SICP's "if?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the semantics of uLisp's symbolp() may not be
-// 100% Scheme-compliant. It's good enough approximation for now.
 #define if_p(tag) (symbolp(tag) && (tag)->name == IF)
 
 // A macro that answers the same question as SICP's "primitive-procedure?"
@@ -215,9 +198,10 @@ object *cons (object *arg1, object *arg2) {
   return ptr;
 }
 
-object *symbol (symbol_t name) {
+object * make_symbol(symbol_t name)
+{
   object *ptr = myalloc();
-  ptr->type = SYMBOL;
+  ptr->type = T_SYMBOL;
   ptr->name = name;
   return ptr;
 }
@@ -521,7 +505,7 @@ object * sp_define(object * args, object * env)
 
 		// Existing or new object with name == variable and with
 		// value set to lambda.
-		object * val = cons(symbol(LAMBDA), cons(formals_list, body));
+		object * val = cons(make_symbol(LAMBDA), cons(formals_list, body));
 		object * pair = value(variable->name, GlobalEnv);
 		if (pair != elist) {
 			// Update existing object.
@@ -654,12 +638,12 @@ const tbl_entry_t lookup_table[] = {
   // Type predicates. r7rs chapter "3.2. Disjointness of types".
   { "boolean?",  fn_booleanp,      1, 1 },
   { "null?",     fn_nullp,         1, 1 },
+  { "symbol?",   fn_symbolp,       1, 1 },
 
   { "cons",      fn_cons,    2, 2 },
   { "atom",      fn_atom,    1, 1 },
   { "listp",     fn_listp,   1, 1 },
   { "consp",     fn_consp,   1, 1 },
-  { "symbolp",   fn_symbolp, 1, 1 },
   { "eq",        fn_eq,      2, 2 },
   { "car",       fn_car,     1, 1 },
   { "cdr",       fn_cdr,     1, 1 },
@@ -998,8 +982,8 @@ object * next_single_item(void)
     // Fall-through to building and returning new symbol object.
     ;
   }
-  if (x < ENDFUNCTIONS) return symbol(x);
-  else if (index < 4 && valid40(Buffer)) return symbol(pack40(Buffer));
+  if (x < ENDFUNCTIONS) return make_symbol(x);
+  else if (index < 4 && valid40(Buffer)) return make_symbol(pack40(Buffer));
   error("Illegal symbol");
   return elist; // What we return after error()'s longjmp() call doesn't really matter.
 }
@@ -1030,7 +1014,7 @@ object * read_rest(void)
   if (item == (object *) QUO) {
     // Read quoted expression.
     object * arg1 = read();
-    return cons(cons(symbol(QUOTE), cons(arg1, elist)), read_rest());
+    return cons(cons(make_symbol(QUOTE), cons(arg1, elist)), read_rest());
   }
 
   if (item == (object *) BRA) {
@@ -1046,7 +1030,7 @@ object *read() {
   object * item = next_single_item();
   if (item == (object *)BRA) return read_rest();
   if (item == (object *)DOT) return read();
-  if (item == (object *)QUO) return cons(symbol(QUOTE), cons(read(), elist));
+  if (item == (object *)QUO) return cons(make_symbol(QUOTE), cons(read(), elist));
   return item;
 }
 
