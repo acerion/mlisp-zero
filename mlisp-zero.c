@@ -36,6 +36,9 @@
 #define pop(y)             ((y) = cdr(y))
 
 #define booleanp(obj)      (((obj) != NULL) && ((obj)->type == T_BOOLEAN))
+// TODO 2026.11.04 acerion: the comparison to ZERO was moved from old code,
+// but I don't understand why it's needed.
+#define pairp(obj)         (((obj) != NULL) && ((obj)->type >= T_PAIR || (obj)->type == ZERO))
 #define symbolp(obj)       (((obj) != NULL) && ((obj)->type == T_SYMBOL))
 
 #define mark(x)            (car(x) = (object *)(((uintptr_t)(car(x))) | MARKBIT))
@@ -62,9 +65,10 @@ enum function {
 
 	BOOLEANP,     // boolean?
 	NULLP,        // null?
+	PAIRP,        // pair?
 	SYMBOLP,      // symbol?
 
-	CONS, ATOM, LISTP, CONSP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
+	CONS, ATOM, LISTP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
 
@@ -225,7 +229,7 @@ void markobject (object *obj) {
   unsigned int type = obj->type;
   mark(obj);
   
-  if (type >= PAIR || type == ZERO) { // cons
+  if (type >= T_PAIR || type == ZERO) { // cons
     markobject(arg);
     obj = cdr(obj);
     goto MARK;
@@ -278,22 +282,16 @@ void error2 (const object * symbol, const char * string) {
 
 // Helper functions
 
-bool consp (const object *x) {
-  if (x == elist) return false;
-  unsigned int type = x->type;
-  return type >= PAIR || type == ZERO;
-}
-
 bool atom (const object *x) {
   if (x == elist) return true;
   unsigned int type = x->type;
-  return type < PAIR && type != ZERO;
+  return type < T_PAIR && type != ZERO;
 }
 
 bool listp (const object *x) {
   if (x == elist) return true;
   unsigned int type = x->type;
-  return type >= PAIR || type == ZERO;
+  return type >= T_PAIR || type == ZERO;
 }
 
 int toradix40 (char ch) {
@@ -488,7 +486,7 @@ object * sp_define(object * args, object * env)
 		}
 		return variable;
 
-	} else if (consp(head)) {
+	} else if (pairp(head)) {
 		// R7RS-small, chapter 5.3, form 2 and 3.
 		object * variable = car(head);  // Function's name
 		object * formals = cdr(head);   // Function's formal arguments
@@ -565,9 +563,10 @@ object *fn_listp (object *args, object *env) {
   return listp(first(args)) ? tee : eff;
 }
 
-object *fn_consp (object *args, object *env) {
+object *fn_pairp(object *args, object *env)
+{
   (void) env;
-  return consp(first(args)) ? tee : eff;
+  return pairp(first(args)) ? tee : eff;
 }
 
 object *fn_symbolp (object *args, object *env) {
@@ -638,12 +637,12 @@ const tbl_entry_t lookup_table[] = {
   // Type predicates. r7rs chapter "3.2. Disjointness of types".
   { "boolean?",  fn_booleanp,      1, 1 },
   { "null?",     fn_nullp,         1, 1 },
+  { "pair?",     fn_pairp,         1, 1 },
   { "symbol?",   fn_symbolp,       1, 1 },
 
   { "cons",      fn_cons,    2, 2 },
   { "atom",      fn_atom,    1, 1 },
   { "listp",     fn_listp,   1, 1 },
-  { "consp",     fn_consp,   1, 1 },
   { "eq",        fn_eq,      2, 2 },
   { "car",       fn_car,     1, 1 },
   { "cdr",       fn_cdr,     1, 1 },
