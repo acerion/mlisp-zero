@@ -35,6 +35,7 @@
 #define push(x, y)         ((y) = cons((x),(y)))
 #define pop(y)             ((y) = cdr(y))
 
+#define booleanp(obj)      (((obj) != NULL) && ((obj)->type == T_BOOLEAN))
 #define symbolp(x)         ((x)->type == SYMBOL)
 
 #define mark(x)            (car(x) = (object *)(((uintptr_t)(car(x))) | MARKBIT))
@@ -59,7 +60,8 @@ enum function {
 	SET,       // set!
 	IF, FUNCTIONS, NOT,
 
-	NULLP,    // null?
+	BOOLEANP,     // boolean?
+	NULLP,        // null?
 
 	CONS, ATOM, LISTP, CONSP, SYMBOLP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
@@ -124,7 +126,7 @@ object * eff;
 // TODO (acerion) 2026.10.04: the conditions should be checking type ("empty
 // list" type or "boolean" type). Scheme has such types, but this
 // implementation doesn't support them yet).
-#define self_evaluating_p(x) ((x) == elist || (x)->name == TEE || (x)->name == EFF)
+#define self_evaluating_p(obj) ((obj) == elist || booleanp(obj))
 
 // A macro that mimics SICP's "variable?" predicate used in eval.
 //
@@ -216,6 +218,14 @@ object *cons (object *arg1, object *arg2) {
 object *symbol (symbol_t name) {
   object *ptr = myalloc();
   ptr->type = SYMBOL;
+  ptr->name = name;
+  return ptr;
+}
+
+object * make_boolean(symbol_t name)
+{
+  object *ptr = myalloc();
+  ptr->type = T_BOOLEAN;
   ptr->name = name;
   return ptr;
 }
@@ -325,7 +335,7 @@ bool valid40 (char *buffer) {
 }
 
 const char *name (const object *obj) {
-  if(!symbolp(obj)) error("Error in name");
+  if(!symbolp(obj) && !booleanp(obj)) error("Error in name");
   symbol_t x = obj->name;
   if (x < ENDFUNCTIONS) return lookupbuiltin(x);
   Buffer[3] = '\0';
@@ -581,6 +591,12 @@ object *fn_symbolp (object *args, object *env) {
   return symbolp(first(args)) ? tee : eff;
 }
 
+object * fn_booleanp(object * args, object * env)
+{
+  (void) env;
+  return booleanp(first(args)) ? tee : eff;
+}
+
 object *fn_eq (object *args, object *env) {
   (void) env;
   return eq(first(args), second(args)) ? tee : eff;
@@ -636,7 +652,8 @@ const tbl_entry_t lookup_table[] = {
   { "not",       fn_not,     1, 1 },
 
   // Type predicates. r7rs chapter "3.2. Disjointness of types".
-  { "null?",     fn_nullp,   1, 1 },
+  { "boolean?",  fn_booleanp,      1, 1 },
+  { "null?",     fn_nullp,         1, 1 },
 
   { "cons",      fn_cons,    2, 2 },
   { "atom",      fn_atom,    1, 1 },
@@ -914,6 +931,8 @@ void printobject(const object *form){
     pchar(')');
   } else if (symbolp(form)) {
     pstring(name(form));
+  } else if (booleanp(form)) {
+    pstring(name(form));
   } else
     error("Error in print.");
 }
@@ -1035,8 +1054,8 @@ object *read() {
 
 void initenv() {
   GlobalEnv = elist;
-  tee = symbol(TEE);
-  eff = symbol(EFF);
+  tee = make_boolean(TEE);
+  eff = make_boolean(EFF);
 }
 
 void setup() {

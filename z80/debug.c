@@ -33,6 +33,9 @@ void dbg_object_fn(int indent, const char * label, const object * const o)
 	case ZERO:
 		printf("{ name = "ptr_fmt"  ||  int = "ptr_fmt" } }\n", ptr_pri(o->name), ptr_pri(o->integer));
 		break;
+	case T_BOOLEAN:
+		printf("{ name = "ptr_fmt"  ||  int = "ptr_fmt" } }\n", ptr_pri(o->name), ptr_pri(o->integer));
+		break;
 	case SYMBOL:
 		printf("{ name = "ptr_fmt"  ||  int = "ptr_fmt" } }\n", ptr_pri(o->name), ptr_pri(o->integer));
 		break;
