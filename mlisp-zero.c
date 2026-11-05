@@ -36,6 +36,7 @@
 #define pop(y)             ((y) = cdr(y))
 
 #define booleanp(obj)      (((obj) != NULL) && ((obj)->type == T_BOOLEAN))
+#define nullp(obj)         ((obj) == elist)
 // TODO 2026.11.04 acerion: the comparison to ZERO was moved from old code,
 // but I don't understand why it's needed.
 #define pairp(obj)         (((obj) != NULL) && ((obj)->type >= T_PAIR || (obj)->type == ZERO))
@@ -128,11 +129,7 @@ object * tee;
 object * eff;
 
 // A macro that mimics SICP's "self-evaluating?" predicate used in eval.
-//
-// TODO (acerion) 2026.10.04: the conditions should be checking type ("empty
-// list" type or "boolean" type). Scheme has such types, but this
-// implementation doesn't support them yet).
-#define self_evaluating_p(obj) ((obj) == elist || booleanp(obj))
+#define self_evaluating_p(obj) (nullp(obj) || booleanp(obj))
 
 // A macro that mimics SICP's "variable?" predicate used in eval.
 #define variable_p(x) symbolp(x)
@@ -342,7 +339,7 @@ int eq (object *arg1, object *arg2) {
 object *progn (object *args, object *env) {
   if (args == elist) return elist;
   object *more = cdr(args);
-  while (more != elist) {
+  while (!nullp(more)) {
     eval(car(args), env);
     args = more;
     more = cdr(args);
@@ -355,7 +352,7 @@ object *progn (object *args, object *env) {
 object *value (symbol_t n, object *env) {
   // env is a list, so iterate over the list, recognizing () as terminator of
   // the list.
-  while (env != elist) {
+  while (!nullp(env)) {
     object *pair = car(env);
     if (pair != elist && car(pair)->name == n) return pair;
     env = cdr(env);
@@ -374,7 +371,7 @@ object *findvalue (object *var, object *env) {
 object *findtwin (object *var, object *env) {
   // env is a list, so iterate over the list, recognizing () as terminator of
   // the list.
-  while (env != elist) {
+  while (!nullp(env)) {
     object *pair = car(env);
     if (pair != elist && car(pair) == var) return pair;
     env = cdr(env);
@@ -384,7 +381,7 @@ object *findtwin (object *var, object *env) {
 
 void dropframe (int tc, object **env) {
   if (tc) {
-    while (*env != elist && car(*env) != elist) {
+    while (!nullp(*env) && !nullp(car(*env))) {
       pop(*env);
     }
   } else {
@@ -408,7 +405,7 @@ object * closure(const object * const fname, const object * const function, obje
 
   // Add arguments to environment.
   const object * params = first(function);
-  while (params != elist && args != elist) {
+  while (!nullp(params) && !nullp(args)) {
     object * var = first(params);
     object * value = first(args);
     push(cons(var, value), *env);
@@ -546,7 +543,7 @@ object *fn_not (object *args, object *env) {
 
 object *fn_nullp (object *args, object *env) {
   (void) env;
-  return (first(args) == elist) ? tee : eff;
+  return nullp(first(args)) ? tee : eff;
 }
 
 object *fn_cons (object *args, object *env) {
@@ -588,7 +585,7 @@ static object * fn_symbol_eq_p(object * form, object * env)
 	// in future.
 	char prev_name[BUFFERSIZE] = { 0 };
 
-	while (form != elist) {
+	while (!nullp(form)) {
 		const object * cur_obj = car(form);
 		if (!symbolp(cur_obj)) {
 			error2(cur_obj, "in symbol=?: not a symbol");
@@ -853,7 +850,7 @@ object * apply(object * form, object *env)
   form = cdr(form);
   int nargs = 0;
 
-  while (form != elist) {
+  while (!nullp(form)) {
     object *obj = cons(eval(car(form),env), elist);
     cdr(tail) = obj;
     tail = obj;
