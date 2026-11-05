@@ -68,6 +68,7 @@ enum function {
 	PAIRP,        // pair?
 	SYMBOLP,      // symbol?
 
+	SYMBOL_EQ_P,  // symbol=?
 	CONS, ATOM, LISTP, EQ, CAR, CDR, EVAL, GLOBALS, LOCALS, ENDFUNCTIONS };
 
 // Typedefs
@@ -574,6 +575,52 @@ object *fn_symbolp (object *args, object *env) {
   return symbolp(first(args)) ? tee : eff;
 }
 
+// C function behind Scheme's "symbol=?" function
+//
+// TODO acerion 2026.11.05: this function returns #true on comparison of 'if'
+// built-in objects ("(symbol=? if if)"). 'if' is not a proper symbol. This
+// happens probably because reader functions use make_symbol() too eagerly.
+static object * fn_symbol_eq_p(object * form, object * env)
+{
+	(void) env;
+
+	// TODO acerion 2026.11.05: maximum length of symbol names may change
+	// in future.
+	char prev_name[BUFFERSIZE] = { 0 };
+
+	while (form != elist) {
+		const object * cur_obj = car(form);
+		if (!symbolp(cur_obj)) {
+			error2(cur_obj, "in symbol=?: not a symbol");
+			return eff;
+		}
+
+		// We can hold this reference safely only because name()
+		// returns a pointer that is a global buffer.
+		const char * cur_name = name(cur_obj);
+
+		if (prev_name[0] == '\0') {
+			// We are on the first symbol in the list, so there
+			// is nothing to compare it with yet (no second
+			// object). Skip comparison of objects' names.
+		} else {
+			if (0 != strcmp(prev_name, cur_name)) {
+				// Symbols with different names fail the test.
+				return eff;
+			}
+		}
+
+		// Get current symbol's name and then move to next object in
+		// the list (iterate).
+		strncpy(prev_name, cur_name, sizeof (prev_name));
+		prev_name[sizeof(prev_name) - 1] = '\0';
+
+		form = cdr(form);
+	}
+
+	return tee;
+}
+
 object * fn_booleanp(object * args, object * env)
 {
   (void) env;
@@ -640,6 +687,7 @@ const tbl_entry_t lookup_table[] = {
   { "pair?",     fn_pairp,         1, 1 },
   { "symbol?",   fn_symbolp,       1, 1 },
 
+  { "symbol=?",  fn_symbol_eq_p,   2, 127 },
   { "cons",      fn_cons,    2, 2 },
   { "atom",      fn_atom,    1, 1 },
   { "listp",     fn_listp,   1, 1 },
